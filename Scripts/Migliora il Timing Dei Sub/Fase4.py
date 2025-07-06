@@ -16,7 +16,7 @@ CONFIG_PATH = os.path.join(project_path, "Scripts", "Migliora il Timing Dei Sub"
 # Valori di default
 DEFAULT_CONFIG = {
     "max_range_next_scene": 300,
-    "gap_threshold": 230,
+    "gap_threshold": 250,
     "scene_change_before_threshold": 200,
     "scene_change_after_threshold": 200
 }
