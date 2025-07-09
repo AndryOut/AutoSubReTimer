@@ -14,7 +14,7 @@ CONFIG_PATH = os.path.join(os.path.dirname(__file__), "Config_Fase2.json")
 DEFAULT_CONFIG = {
     "picco_audio_threshold": 400,
     "max_range_picco": 700,
-    "lead_in": 170,
+    "lead_in": 200,
     "lead_out": 450
 }
 
