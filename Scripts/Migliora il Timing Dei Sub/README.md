@@ -31,7 +31,8 @@ Value 1 "Peak detection margin after initial timestamp (ms)":
 
 ![1](https://github.com/user-attachments/assets/4f44dde5-b04e-4318-b9c4-b7a7925b38dc)
 
-"200" Changing this value ensures that the detection of the first audio peak of the spoken audio after the line start is identified with more margin.  
+This sets a margin to detect the first audio peak of speech after the line’s initial timestamp.
+It’s mainly used to remove lead-in from subtitles and then reapply it based on your personal settings. (Recommended value: 400)  
 
 Example with 200 milliseconds:  
 
@@ -41,14 +42,12 @@ Here, the value 200 is more than enough to detect the first audio peak after the
 The distance from the first arrow (line's initial timestamp) to the second arrow (first audio peak) falls within the 200-millisecond range.  
 If the distance of the audio peak is farther from the line's initial timestamp, you can increase this value.  
 
-What issues might arise if this value is set too high?  
-In some cases, if the audio peak is not detected correctly, it may use the next audio peak (as it has more margin), resulting in a line with a part of the spoken audio cut off.
-
 Value 2 "Peak detection margin before final timestamp (ms)":  
 
 ![1](https://github.com/user-attachments/assets/866a6f7b-59ec-4ed6-b28b-ba44c519c589)
 
-"600" Changing these values ensures that the detection of the first audio peak of the spoken audio before the line end is identified with more margin.  
+This sets a margin to detect the first audio peak of speech before the line’s end timestamp.
+It’s mainly used to remove lead-out from subtitles and then reapply it based on your personal settings. (Recommended value: 700)  
 
 Example with 600 milliseconds:  
 
@@ -58,17 +57,13 @@ Here, the value 600 is more than enough to detect the first audio peak before th
 The distance from the first arrow (first audio peak) to the second arrow (line's final timestamp) falls within the 600-millisecond range.  
 If the distance of the audio peak is farther from the line's final timestamp, you can increase this value.  
 
-What issues might arise if this value is set too high?  
-In some cases, if the audio peak is not detected correctly, it may use the previous audio peak (as it has more margin), resulting in a line with a part of the spoken audio cut off.
-
 Value 3-4 "Add Lead-in" - "Add Lead-out":  
 
 ![1](https://github.com/user-attachments/assets/11e89b62-b6a7-43ec-8663-eb7ae2ab9c7c)
 
-You can modify the lead-in and lead-out values based on your personal preference.  
+You can set your preferred lead-in and lead-out values here. (Recommended: Lead-in 170/180, Lead-out 450)
 
-What issues might arise if this value is set too high?  
-(A common issue is that audio peaks may not be detected correctly, so lead is added anyway. Keep these values not too high.)
+If audio peaks in "Peak detection margin after initial timestamp (ms)" and "Peak detection margin before final timestamp (ms)" are not detected because the value was set too low, then the lead-in and lead-out will still be added, resulting in longer lines. Simply increase the peak detection values to address these overly long lines.
 
 Fase3.py:  
 - Detects scene changes and saves them in a .srt file, which will then be used by "Fase4.py".  
@@ -87,28 +82,32 @@ Value 1 "Max range to detect a scene change from the final timestamp (ms)":
 
 ![fase4](https://github.com/user-attachments/assets/e614e08e-89ee-4bec-85e0-7a082e41e708)
 
-Changing this value gives more margin to detect a scene change occurring after the line's final timestamp.  
-(If you set this value too high, it may result in lines being extended too much as lead-out to adjust to a scene change. )
-
-(Keep in mind that this value is linked to the lead-out of "Fase2". So if you have set "500" in lead-out, the "300" range will check if there are scene changes after "500" of lead out, this means that if it finds a scene change, you will have a line that from the final audio peak will be a hypothetical 800 ms in lead-out until the detected scene change (500 ± 300).
+This value detects a scene change (keyframe) after a line’s end timestamp.
+The margin checks if there’s a scene change after applying the lead-out set in "Fase2 Configuration".
+For example, if you set the lead-out to 450 (recommended), the maximum range would be 750ms (450±300 if a scene change is detected).
 
 Value 2 "Max gap 'empty' between two lines to attach (ms)":
 
 ![fase4](https://github.com/user-attachments/assets/6d424b8a-aad4-4856-8f07-d2cdf717e37e)
 
-This setting allows you to configure the threshold for deciding how much "empty" space there must be to merge two subtitle lines. Merging the lines improves fluidity between them. If you leave it at 230, the lines won’t stretch too much to attach to the next line, but there will be a natural "break" based on the fluidity of the speech. (This is obviously a personal preference, but you can now adjust the threshold to your liking).
+This controls the distance between two lines. If the next line is within 250 (recommended), they’ll be merged for smoother reading. If the gap is larger, they won’t be joined.
+This indirectly depends on your lead-in/lead-out values in "Fase2 Configuration".
 
 Value 3 "Max range to detect scene change before the initial timestamp (ms):
 
 ![fase4](https://github.com/user-attachments/assets/840ae9ef-b171-4fdb-b0d5-044ac1bef798)
 
-Allows you to set the maximum distance to detect a scene change and link it before the initial timestamp of the line.
+This determines whether to link a scene change (keyframe) found before the line’s initial timestamp, based on the set margin.
+For example, if a scene change is detected within 200 (recommended) before the line starts, it will be linked. If it’s beyond this margin, it won’t.
+This indirectly depends on your lead-in value in "Fase2 Configuration".
 
 Value 4 "Max range to detect scene change after the initial timestamp (ms):
 
 ![fase4](https://github.com/user-attachments/assets/e1cd1def-68ae-4b99-a205-214ab6c6ed44)
 
-Allows you to set the maximum distance to detect a scene change and link it after the initial timestamp of the line.
+This determines whether to link a scene change (keyframe) found after the line’s initial timestamp, based on the set margin.
+For example, if a scene change is detected within 200 (recommended) after the line starts, it will be linked. If it’s beyond this margin, it won’t (this is rarer than the previous case, but the program will handle it if needed).
+This indirectly depends on your lead-in value in "Fase2 Configuration".
 
 Fase5.py:  
 - Ensures that if you initially uploaded an .ass file with subs to adjust, you will get a final .ass file with the original header of the uploaded subs, and every single line will retain its original styles but with adjusted timing.  
