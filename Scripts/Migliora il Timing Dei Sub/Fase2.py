@@ -10,12 +10,12 @@ import json
 # =============================================
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "Config_Fase2.json")
 
-# Valori di default (gli stessi dello script originale)
+# Valori di default
 DEFAULT_CONFIG = {
-    "picco_audio_threshold": 400,
+    "picco_audio_threshold": 500,
     "max_range_picco": 700,
-    "lead_in": 200,
-    "lead_out": 450
+    "lead_in": 175,
+    "lead_out": 420
 }
 
 try:
@@ -60,7 +60,7 @@ def adjust_timestamps_based_on_peaks(subs, audio_file):
         start_ms = sub.start.ordinal
         end_ms = sub.end.ordinal
 
-        # Modificato: 200 -> PICCO_AUDIO_THRESHOLD
+        # PICCO_AUDIO_THRESHOLD
         for segment_start, segment_end in audio_segments:
             if segment_start >= start_ms:
                 if segment_start - start_ms > PICCO_AUDIO_THRESHOLD:
@@ -79,7 +79,7 @@ def adjust_timestamps_based_on_peaks(subs, audio_file):
         is_on_peak = any(segment_start <= end_ms <= segment_end for segment_start, segment_end in audio_segments)
 
         if not is_on_peak:
-            # Modificato: [600, 600] -> [MAX_RANGE_PICCO, MAX_RANGE_PICCO]
+            # [MAX_RANGE_PICCO, MAX_RANGE_PICCO]
             max_ranges = [MAX_RANGE_PICCO, MAX_RANGE_PICCO]
             for max_range in max_ranges:
                 found = False
@@ -92,7 +92,7 @@ def adjust_timestamps_based_on_peaks(subs, audio_file):
                 if found:
                     break
 
-            # Modificato: 600 -> MAX_RANGE_PICCO
+            # MAX_RANGE_PICCO
             if end_ms - sub.end.ordinal > MAX_RANGE_PICCO:
                 for segment_start, segment_end in audio_segments:
                     if segment_end <= end_ms and segment_start >= start_ms:
@@ -104,7 +104,7 @@ def adjust_timestamps_based_on_peaks(subs, audio_file):
 
     return subs
 
-# Modificato: lead_in=200 -> lead_in=LEAD_IN, lead_out=500 -> lead_out=LEAD_OUT
+# lead_in -> lead_in=LEAD_IN, lead_out -> lead_out=LEAD_OUT
 def add_lead_in_out(segments, original_subs, lead_in=LEAD_IN, lead_out=LEAD_OUT):
     adjusted_segments = []
     for i, (start, end) in enumerate(segments):

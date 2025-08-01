@@ -4,7 +4,7 @@ import librosa
 import numpy as np
 import os
 
-# Percorso della directory principale del progetto (relativa)
+# Percorso della directory principale del progetto
 project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # Funzione per convertire i millisecondi in SubRip Time
@@ -23,34 +23,36 @@ def get_audio_peaks(audio_file):
     peak_times = librosa.frames_to_time(peaks, sr=sr)
     return peak_times
 
-# Funzione per rilevare cambi scena prima del time stamps iniziali della riga
 def adjust_subs_based_on_scenes(original_subs, scene_subs):
-    adjusted_subs = original_subs
+    adjusted_subs = original_subs.copy() 
     for idx, sub in enumerate(adjusted_subs):
         start_replaced = False
+        sub_start = sub.start.ordinal
+        
         for scene in reversed(scene_subs):
-            scene_end = scene.end.ordinal
-            sub_start = sub.start.ordinal
-            if 0 < (sub_start - scene_end) <= 200:
-                sub.start = milliseconds_to_subrip_time(scene_end)
+            scene_start = scene.start.ordinal
+            
+            if 0 < (sub_start - scene_start) <= 200:
+                sub.start = milliseconds_to_subrip_time(scene_start)
                 start_replaced = True
                 break
+        
         if idx > 0:
             prev_sub = adjusted_subs[idx - 1]
             prev_sub_end = prev_sub.end.ordinal
-            prev_sub_start = prev_sub.start.ordinal
-            if prev_sub_end > scene_end and scene_end >= prev_sub_start:
+            
+            if prev_sub.start.ordinal < scene_start < prev_sub_end:
                 if start_replaced:
-                    prev_sub.end = milliseconds_to_subrip_time(scene_end - 0)
+                    prev_sub.end = milliseconds_to_subrip_time(scene_start)
             else:
-                if scene_end >= prev_sub_end:
-                    if start_replaced:
-                        sub.start = milliseconds_to_subrip_time(scene_end)
+                if scene_start >= prev_sub_end and start_replaced:
+                    sub.start = milliseconds_to_subrip_time(scene_start)
                 if not start_replaced:
                     prev_sub.end = milliseconds_to_subrip_time(prev_sub_end)
+    
     return adjusted_subs
 
-# Funzione per rilevare e sostituire il timestamp iniziale della riga se il cambio scena è entro 0,250 secondi
+# Funzione per rilevare e sostituire il timestamp iniziale della riga
 def adjust_sub_start_based_on_scene_change(original_subs, scene_subs):
     for sub in original_subs:
         sub_start = sub.start.ordinal
@@ -65,7 +67,7 @@ def adjust_sub_start_based_on_scene_change(original_subs, scene_subs):
 def add_lead_in_to_peaks(subs, audio_peaks):
     min_lead_in = 10
     max_lead_in = 20
-    additional_lead_in = 30
+    additional_lead_in = 100
     gap_threshold = 300
 
     for idx, sub in enumerate(subs):
@@ -123,7 +125,7 @@ def add_lead_in_based_on_conditions(subs, scene_subs):
                     if sub_start - previous_sub_end <= range_previous_line:
                         has_previous_line_in_range = True
 
-                # Se tutte le condizioni sono soddisfatte, aggiungi il lead-in
+                # Se tutte le condizioni sono soddisfatte, aggiunge il lead-in
                 if not has_previous_line_in_range:
                     sub.start = milliseconds_to_subrip_time(
                         sub_start - lead_in_increment
@@ -183,7 +185,7 @@ adjusted_subs = add_lead_in_to_peaks(original_subs, audio_peaks)
 # Funzione per rilevare cambi scena prima del time stamps iniziali della riga
 adjusted_subs = adjust_subs_based_on_scenes(original_subs, scene_subs)
 
-# Funzione per rilevare e sostituire il timestamp iniziale della riga se il cambio scena è entro 0,250 secondi
+# Funzione per rilevare e sostituire il timestamp iniziale della riga
 adjusted_subs = adjust_sub_start_based_on_scene_change(original_subs, scene_subs)
 
 # Funzione per sostituire il timestamp finale della riga con il timestamp iniziale del cambio scena successivo
