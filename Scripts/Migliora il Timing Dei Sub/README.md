@@ -32,7 +32,7 @@ Value 1 "Peak detection margin after initial timestamp (ms)":
 ![1](https://github.com/user-attachments/assets/4f44dde5-b04e-4318-b9c4-b7a7925b38dc)
 
 This sets a margin to detect the first audio peak of speech after the line’s initial timestamp.
-It’s mainly used to remove lead-in from subtitles and then reapply it based on your personal settings. (Recommended value: 400)  
+It’s mainly used to remove lead-in from subtitles and then reapply it based on your personal settings. (Recommended value: 400-500)  
 
 Example with 200 milliseconds:  
 
@@ -47,7 +47,7 @@ Value 2 "Peak detection margin before final timestamp (ms)":
 ![1](https://github.com/user-attachments/assets/866a6f7b-59ec-4ed6-b28b-ba44c519c589)
 
 This sets a margin to detect the first audio peak of speech before the line’s end timestamp.
-It’s mainly used to remove lead-out from subtitles and then reapply it based on your personal settings. (Recommended value: 700)  
+It’s mainly used to remove lead-out from subtitles and then reapply it based on your personal settings. (Recommended value: 700+)  
 
 Example with 600 milliseconds:  
 
@@ -61,7 +61,7 @@ Value 3-4 "Add Lead-in" - "Add Lead-out":
 
 ![1](https://github.com/user-attachments/assets/11e89b62-b6a7-43ec-8663-eb7ae2ab9c7c)
 
-You can set your preferred lead-in and lead-out values here. (Recommended: Lead-in 170/180, Lead-out 450)
+You can set your preferred lead-in and lead-out values here. (Recommended: Lead-in 170-180, Lead-out 400-450)
 
 If audio peaks in "Peak detection margin after initial timestamp (ms)" and "Peak detection margin before final timestamp (ms)" are not detected because the value was set too low, then the lead-in and lead-out will still be added, resulting in longer lines. Simply increase the peak detection values to address these overly long lines.
 
@@ -84,24 +84,25 @@ Value 1 "Max range to detect a scene change from the final timestamp (ms)":
 
 This value detects a scene change (keyframe) after a line’s end timestamp.
 The margin checks if there’s a scene change after applying the lead-out set in "Fase2 Configuration".
-For example, if you set the lead-out to 450 (recommended), the maximum range would be 750ms (450±300 if a scene change is detected).
+For example, if you set the lead-out to 450 (Fase2), the maximum range would be 750ms (450±300 if a scene change is detected).
 
 Value 2 "Max gap 'empty' between two lines to attach (ms)":
 
 ![fase4](https://github.com/user-attachments/assets/6d424b8a-aad4-4856-8f07-d2cdf717e37e)
 
-This controls the distance between two lines. If the next line is within 250 (recommended), they’ll be merged for smoother reading. If the gap is larger, they won’t be joined.
+This controls the distance between two lines. If the next line is within 250-300 (recommended), they’ll be merged for smoother reading. If the gap is larger, they won’t be joined.
 This indirectly depends on your lead-in/lead-out values in "Fase2 Configuration".
 
-Value 3 "Max range to detect scene change before the initial timestamp (ms):
+Value 3 "Max range to detect scene change before the initial timestamp (ms):"
 
 ![fase4](https://github.com/user-attachments/assets/840ae9ef-b171-4fdb-b0d5-044ac1bef798)
 
-This determines whether to link a scene change (keyframe) found before the line’s initial timestamp, based on the set margin.
-For example, if a scene change is detected within 200 (recommended) before the line starts, it will be linked. If it’s beyond this margin, it won’t.
+This determines whether to link a scene change (keyframe) found before the line’s initial timestamp, based on the set margin (200-250 recommended).
+For example, if a scene change is detected within 250 before the line starts, it will be linked. If it’s beyond this margin, it won’t.
 This indirectly depends on your lead-in value in "Fase2 Configuration".
+For example: Lead-in 180 (Fase2), Max range 250. That is, 180±250, so a maximum of 430ms is possible if a scene change is detected.
 
-Value 4 "Max range to detect scene change after the initial timestamp (ms):
+Value 4 "Max range to detect scene change after the initial timestamp (ms):"
 
 ![fase4](https://github.com/user-attachments/assets/e1cd1def-68ae-4b99-a205-214ab6c6ed44)
 
