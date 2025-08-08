@@ -3,6 +3,7 @@ from pydub import AudioSegment
 import librosa
 import numpy as np
 import os
+import math
 import json
 
 # Percorso della directory principale del progetto
@@ -200,6 +201,66 @@ def adjust_sub_end_based_on_previous_scene_change(adjusted_subs, scene_subs, aud
 
     return adjusted_subs
 
+# Snapping
+def snap_to_nearest_frame(subtitle_path, fps, max_search_ms=100):
+    subs = pysrt.open(subtitle_path)
+    
+    for sub in subs:
+        # Salva i timestamp originali
+        original_start = sub.start.ordinal
+        original_end = sub.end.ordinal
+
+        snapped_start = original_start
+        snapped_end = original_end
+
+        # Snapping per START
+        if math.isclose(fps, 24000/1001, rel_tol=1e-5):
+            start_frame = round((original_start * 24000) / (1000 * 1001))
+            snapped_start = int((start_frame * 1000 * 1001) / 24000)
+        elif math.isclose(fps, 25000/1001, rel_tol=1e-5):
+            start_frame = round((original_start * 25000) / (1000 * 1001))
+            snapped_start = int((start_frame * 1000 * 1001) / 25000)
+        elif math.isclose(fps, 30000/1001, rel_tol=1e-5):
+            start_frame = round((original_start * 30000) / (1000 * 1001))
+            snapped_start = int((start_frame * 1000 * 1001) / 30000)
+        elif math.isclose(fps, 60000/1001, rel_tol=1e-5):
+            start_frame = round((original_start * 60000) / (1000 * 1001))
+            snapped_start = int((start_frame * 1000 * 1001) / 60000)
+        elif math.isclose(fps, 23.810, rel_tol=1e-5):
+            start_frame = round((original_start * 24) / (1.001 * 1000))
+            snapped_start = int((start_frame * 1000 * 1.001) / 24)
+        else:  # FPS standard (24, 25, 30...)
+            start_frame = round(original_start * fps / 1000)
+            snapped_start = int(start_frame * 1000 / fps)
+
+        # Snapping per END 
+        if math.isclose(fps, 24000/1001, rel_tol=1e-5):
+            end_frame = round((original_end * 24000) / (1000 * 1001))
+            snapped_end = int((end_frame * 1000 * 1001) / 24000)
+        elif math.isclose(fps, 25000/1001, rel_tol=1e-5):
+            end_frame = round((original_end * 25000) / (1000 * 1001))
+            snapped_end = int((end_frame * 1000 * 1001) / 25000)
+        elif math.isclose(fps, 30000/1001, rel_tol=1e-5):
+            end_frame = round((original_end * 30000) / (1000 * 1001))
+            snapped_end = int((end_frame * 1000 * 1001) / 30000)
+        elif math.isclose(fps, 60000/1001, rel_tol=1e-5):
+            end_frame = round((original_end * 60000) / (1000 * 1001))
+            snapped_end = int((end_frame * 1000 * 1001) / 60000)
+        elif math.isclose(fps, 23.810, rel_tol=1e-5):
+            end_frame = round((original_end * 24) / (1.001 * 1000))
+            snapped_end = int((end_frame * 1000 * 1.001) / 24)
+        else:  # FPS standard
+            end_frame = round(original_end * fps / 1000)
+            snapped_end = int(end_frame * 1000 / fps)
+
+        # Applica snapping SOLO se la differenza è <= max_search_ms
+        if abs(snapped_start - original_start) <= max_search_ms:
+            sub.start.ordinal = snapped_start
+        if abs(snapped_end - original_end) <= max_search_ms:
+            sub.end.ordinal = snapped_end
+    
+    subs.save(subtitle_path)
+
 # =============================================
 # ESECUZIONE PRINCIPALE 
 # =============================================
@@ -217,3 +278,21 @@ adjusted_subs = add_lead_in_based_on_conditions(adjusted_subs, scene_subs)
 
 adjusted_subs.save(os.path.join(project_path, 'Final.srt'), encoding='utf-8')
 print("Script completato e sottotitoli aggiornati salvati come 'Final.srt'")
+final_path = os.path.join(project_path, 'Final.srt')
+
+# Controlla se esiste Dialoghi.ass prima di applicare lo snapping
+dialoghi_ass_path = os.path.join(project_path, "Dialoghi.ass")
+if os.path.exists(dialoghi_ass_path):
+    fps_path = os.path.join(project_path, "fps.txt")
+    if os.path.exists(fps_path):
+        try:
+            with open(fps_path, "r") as f:
+                fps = float(f.read().strip())
+            snap_to_nearest_frame(final_path, fps, max_search_ms=100)
+            print(f"Snapping applicato con FPS: {fps}")
+        finally:
+            os.remove(fps_path)
+    else:
+        print("Warning: File fps.txt non trovato, snapping non applicato")
+else:
+    print("Dialoghi.ass non trovato - snapping non applicato")

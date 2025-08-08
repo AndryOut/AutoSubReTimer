@@ -1,4 +1,5 @@
 import os
+import math
 from scenedetect import open_video, SceneManager
 from scenedetect.detectors import AdaptiveDetector
 import pysrt
@@ -10,13 +11,37 @@ from concurrent.futures import as_completed
 project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # Funzione per esportare i risultati in formato SRT con precisione al millisecondo
-def export_srt(scene_list, output_path='scene_timestamps.srt', fps=23.976):
+def export_srt(scene_list, output_path, fps):
     def frame_to_timecode(frame, fps):
-        total_seconds = frame / fps
-        hrs = int(total_seconds // 3600)
-        mins = int((total_seconds % 3600) // 60)
-        secs = int(total_seconds % 60)
-        millis = int((total_seconds % 1) * 1000)
+        if math.isclose(fps, 24000/1001, rel_tol=1e-5):    
+            total_milliseconds = round((frame * 1000 * 1001) / 24000)
+        elif math.isclose(fps, 23.810, rel_tol=1e-5):       
+            total_milliseconds = round(frame * 1000 / 23.810)
+        elif math.isclose(fps, 24.0, rel_tol=1e-5):         
+            total_milliseconds = round(frame * 1000 / 24)
+        elif math.isclose(fps, 24.794, rel_tol=1e-5):      
+            total_milliseconds = round(frame * 1000 / 24.794)
+        elif math.isclose(fps, 25000/1001, rel_tol=1e-5):   
+            total_milliseconds = round((frame * 1000 * 1001) / 25000)
+        elif math.isclose(fps, 25.0, rel_tol=1e-5):         
+            total_milliseconds = round(frame * 1000 / 25)
+        elif math.isclose(fps, 30000/1001, rel_tol=1e-5):   
+            total_milliseconds = round((frame * 1000 * 1001) / 30000)
+        elif math.isclose(fps, 30.0, rel_tol=1e-5):         
+            total_milliseconds = round(frame * 1000 / 30)
+        elif math.isclose(fps, 15.0, rel_tol=1e-5):         
+            total_milliseconds = round(frame * 1000 / 15.0)
+        elif math.isclose(fps, 60000/1001, rel_tol=1e-5): 
+            true_fps = 24000/1001  
+            total_milliseconds = round(frame * 1000 / true_fps)
+        else:
+            total_milliseconds = round(frame * 1000 / fps)
+        
+        hrs = total_milliseconds // 3600000
+        mins = (total_milliseconds % 3600000) // 60000
+        secs = (total_milliseconds % 60000) // 1000
+        millis = total_milliseconds % 1000
+        
         return f"{hrs:02}:{mins:02}:{secs:02},{millis:03}"
 
     with open(output_path, 'w') as f:
@@ -39,40 +64,10 @@ def get_video_framerate(video_path):
     fps = video.frame_rate
     return fps
 
-# Conversione fps sub
-def convert_framerate_like_subtitleedit(input_path, output_path, from_fps=23.976, to_fps=24.0):
-    subs = pysrt.open(input_path)
-    
-    if abs(from_fps - to_fps) < 0.001:
-        subs.save(output_path)
-        return
-    
-    ratio = from_fps / to_fps
-    for sub in subs:
-        sub.start.ordinal = int(round(sub.start.ordinal * ratio))
-        sub.end.ordinal = int(round(sub.end.ordinal * ratio))
-    subs.save(output_path)
-
-# Funzione per calcolare la discrepanza costante
-def calculate_discrepancy(scene_list, srt_path):
-    subs = pysrt.open(srt_path, encoding='utf-8')
-    discrepancies = []
-    count = min(len(scene_list), len(subs))
-    for i in range(count):
-        scene_start = scene_list[i][0].get_seconds()
-        subtitle_start = subs[i].start.ordinal / 1000
-        discrepancy = scene_start - subtitle_start
-        discrepancies.append(discrepancy)
-    return sum(discrepancies) / len(discrepancies)
-
-# Funzione per trovare l'offset più vicino ai valori predefiniti
-def find_closest_offset(discrepancy, possible_offsets):
-    return min(possible_offsets, key=lambda x: abs(x - discrepancy))
-
 # Funzione per applicare un offset globale al file SRT
 def apply_global_offset_to_srt(input_path, output_path, offset):
     def apply_offset(timecode, offset):
-        timecode.ordinal += int(offset * 1000)  # Converte i secondi in millisecondi
+        timecode.ordinal += int(offset * 1000)
         return timecode
 
     subs = pysrt.open(input_path, encoding='utf-8')
@@ -157,7 +152,7 @@ def main():
     # Ottiene il frame rate del video
     fps = get_video_framerate(video_path)
     print(f"Rilevato frame rate video: {fps:.3f} fps")
-
+   
     # Ottiene i segmenti del video da analizzare
     segments = get_segments_to_analyze(srt_path, min_gap=5.0, margin=1.0)
 
@@ -194,36 +189,19 @@ def main():
 
     # Esporta i risultati
     srt_output_path = os.path.join(project_path, "scene_timestamps.srt")
-    export_srt(all_scenes, output_path=srt_output_path)
-
-    # 1. Converte SEMPRE all'FPS del video
-    temp_converted_path = os.path.join(project_path, "temp_converted.srt")
-    if abs(fps - 23.976) >= 0.001:  # Se FPS diverso da 23.976
-        convert_framerate_like_subtitleedit(
-            srt_output_path,
-            temp_converted_path,
-            from_fps=23.976,
-            to_fps=fps
-        )
-        working_srt = temp_converted_path
-    else:
-        working_srt = srt_output_path
+    export_srt(all_scenes, output_path=srt_output_path, fps=fps)
 
     # 2. Applica offset SPECIFICI:
     if abs(fps - 23.976) < 0.001:    # Per 23.976fps
-        offset = -0.020854
-    elif abs(fps - 24.0) < 0.001:    # Per 24.000fps, Non testato per ora
+        offset = -0.020000
+    elif abs(fps - 24.0) < 0.001:    # Per 24.000fps
         offset = 0.0
     else:                            # Per altri FPS
         offset = 0.0
 
     # 3. Applica l'offset
     adjusted_srt_output_path = os.path.join(project_path, "scene_timestamps_adjusted.srt")
-    apply_global_offset_to_srt(working_srt, adjusted_srt_output_path, offset)
-
-    # 4. Pulisce il file temporaneo
-    if os.path.exists(temp_converted_path):
-        os.remove(temp_converted_path)
+    apply_global_offset_to_srt(srt_output_path, adjusted_srt_output_path, offset)
 
     # Stampa risultati
     print(f"Scene rilevate: {len(all_scenes)}")

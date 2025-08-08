@@ -1,0 +1,4 @@
+It allows you to automatically snap lines (timestamps snap to the closest frame, just like aegi does).
+It's not perfect. If anyone has any suggestions or finds any errors, message me on Telegram @DaiBakaAndry.
+
+(If you want to test, copy the two files "Fase3" and "Fase4" and replace them with the existing ones in "Auto Sub ReTimer\Scripts\Migliora il Timing Dei Sub")

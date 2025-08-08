@@ -152,6 +152,9 @@ def main():
     # Ottiene il frame rate del video
     fps = get_video_framerate(video_path)
     print(f"Rilevato frame rate video: {fps:.3f} fps")
+
+    with open(os.path.join(project_path, "fps.txt"), "w") as f:
+        f.write(str(fps))
    
     # Ottiene i segmenti del video da analizzare
     segments = get_segments_to_analyze(srt_path, min_gap=5.0, margin=1.0)

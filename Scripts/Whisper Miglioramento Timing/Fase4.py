@@ -91,7 +91,7 @@ def add_lead_in_to_peaks(subs, audio_peaks):
 
     return subs
 
-# Aggiunge lead-in al time stamps iniziale della riga se la durata è compresa tra 0,400 e 1,000 secondi, ed è regolata a un cambio scena
+# Aggiunge lead-in al time stamps iniziale della riga ed è regolata a un cambio scena
 def add_lead_in_based_on_conditions(subs, scene_subs):
     min_duration = 100  # Durata minima della riga in millisecondi
     max_duration = 1500  # Durata massima della riga in millisecondi
@@ -194,7 +194,7 @@ adjusted_subs = adjust_sub_end_based_on_next_scene_change(original_subs, scene_s
 # Funzione per sostituire il timestamp finale della riga con il timestamp finale del cambio scena precedente
 adjusted_subs = adjust_sub_end_based_on_previous_scene_change(adjusted_subs, scene_subs, audio_peaks)
 
-# Aggiunge lead-in al time stamps iniziale della riga se la durata è compresa tra 0,400 e 1,000 secondi, ed è regolata a un cambio scena
+# Aggiunge lead-in al time stamps iniziale della riga ed è regolata a un cambio scena
 adjusted_subs = add_lead_in_based_on_conditions(adjusted_subs, scene_subs)
 
 # Salva il nuovo file SRT
