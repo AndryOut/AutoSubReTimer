@@ -21,9 +21,8 @@ def milliseconds_to_subrip_time(milliseconds):
     milliseconds = int(milliseconds % 1000)
     return pysrt.SubRipTime(hours=hours, minutes=minutes, seconds=seconds, milliseconds=milliseconds)
 
-# Funzione per rilevare i segmenti audio con Pydub e Librosa
+# Funzione per rilevare i segmenti audio
 def get_audio_segments(audio_file, silence_threshold=320):
-    # Carica l'audio con Pydub
     audio = AudioSegment.from_file(audio_file)
     temp_audio_file = os.path.join(project_dir, "temp.wav")
     audio.export(temp_audio_file, format="wav")
@@ -42,7 +41,7 @@ def get_audio_segments(audio_file, silence_threshold=320):
 
     return segments
 
-# Funzione per aggiungere lead-in partendo dal picco
+# Funzione cercare i picchi precedenti e aggiungere lead-in partendo dal picco trovato
 def add_lead_in_to_peak_or_previous(subs, audio_file, lead_in=150):
     audio_segments = get_audio_segments(audio_file)
     for sub in subs:
@@ -52,17 +51,66 @@ def add_lead_in_to_peak_or_previous(subs, audio_file, lead_in=150):
         found_peak = False
         for segment_start, segment_end in audio_segments:
             if segment_start <= start_ms <= segment_end:
-                # Aggiungi lead-in basandoti su questo picco
                 sub.start = milliseconds_to_subrip_time(max(0, segment_start - lead_in))
                 found_peak = True
                 break
 
-        # Se non è già su un picco, cerca un picco precedente entro 0,300 secondi
+        # Se non è già su un picco, cerca un picco precedente 
         if not found_peak:
             for segment_start, segment_end in reversed(audio_segments):  # Itera al contrario per cercare i picchi precedenti
-                if segment_start < start_ms and (start_ms - segment_start) <= 300:
-                    # Modifica il timestamp per aggiungere il lead-in basandoti sul picco precedente
+                if segment_start < start_ms and (start_ms - segment_start) <= 200:
                     sub.start = milliseconds_to_subrip_time(max(0, segment_start - lead_in))
+                    break
+
+    return subs
+
+# Funzione per togliere lead-in partendo dal picco
+def adjust_to_speech_peaks(subs, audio_file, max_gap=500):
+    audio_segments = get_audio_segments(audio_file)
+    for sub in subs:
+        start_ms = sub.start.ordinal
+        
+        # Cerca il picco più vicino
+        for segment_start, segment_end in audio_segments:
+            if segment_start >= start_ms:
+                if segment_start - start_ms <= max_gap:
+                    sub.start = milliseconds_to_subrip_time(segment_start)
+                else:
+                    for closer_start, closer_end in audio_segments:
+                        if start_ms <= closer_start <= start_ms + 100:
+                            sub.start = milliseconds_to_subrip_time(closer_start)
+                            break
+                break
+    return subs
+
+# Funzione per aggiungere lead-in partendo dal picco
+def add_lead_in(subs, lead_in=170):
+    """Aggiunge l'anticipo (lead-in) dopo l'allineamento ai picchi"""
+    for sub in subs:
+        new_start = max(0, sub.start.ordinal - lead_in)
+        sub.start = milliseconds_to_subrip_time(new_start)
+    return subs
+
+# Funzione per aggiungere lead-out partendo dal picco successivo
+def add_lead_out_to_peak_or_next(subs, audio_file, lead_out=400, max_gap=300):
+    audio_segments = get_audio_segments(audio_file)
+    for sub in subs:
+        end_ms = sub.end.ordinal
+
+        # Controlla se il timestamp finale coincide con un picco audio
+        found_peak = False
+        for segment_start, segment_end in audio_segments:
+            if segment_start <= end_ms <= segment_end:
+                sub.end = milliseconds_to_subrip_time(min(segment_end + lead_out, audio_segments[-1][1]))
+                found_peak = True
+                break
+
+        # Se non è già su un picco, cerca un picco successivo
+        if not found_peak:
+            for segment_start, segment_end in audio_segments:
+                if segment_start > end_ms and (segment_start - end_ms) <= max_gap:
+                    # Modifica il timestamp per estendere al picco successivo
+                    sub.end = milliseconds_to_subrip_time(min(segment_end + lead_out, audio_segments[-1][1]))
                     break
 
     return subs
@@ -77,9 +125,9 @@ def adjust_segments_for_overlap(segments, max_lead_out=200, lead_in=30, max_lead
         if (next_start - end) <= max_lead_out:
             if (next_start - end) > lead_out:
                 remaining_time = next_start - end - lead_out
-                end = next_start - remaining_time  # collega con spazio di 0,000 secondi
+                end = next_start - remaining_time  
             else:
-                end = next_start  # collega con spazio di 0,000 secondi
+                end = next_start  
         else:
             if (next_start - end) > lead_in and (next_start - end) < max_lead_in:
                 end = next_start - lead_in
@@ -101,10 +149,17 @@ if not os.path.exists(srt_file):
 # Carica il file SRT originale
 subs = pysrt.open(srt_file, encoding='utf-8')
 
-# Aggiunge il lead-in partendo dal picco attuale o precedente
+# Funzione cercare i picchi precedenti e aggiungere lead-in partendo dal picco trovato
 subs = add_lead_in_to_peak_or_previous(subs, audio_file)
 
-# Ottieni i segmenti originali con gli orari aggiornati
+# Toglie e aggiunge lead-in partendo dal picco più vicino
+subs = adjust_to_speech_peaks(subs, audio_file) 
+subs = add_lead_in(subs, lead_in=170)        
+
+# Aggiunge il lead-out partendo dal picco successivo
+subs = add_lead_out_to_peak_or_next(subs, audio_file)
+
+# Ottiene i segmenti originali
 final_segments = [(sub.start.ordinal, sub.end.ordinal) for sub in subs]
 
 # Regola i segmenti per evitare sovrapposizioni
@@ -115,7 +170,7 @@ for sub, (start, end) in zip(subs, adjusted_segments):
     sub.start = milliseconds_to_subrip_time(start)
     sub.end = milliseconds_to_subrip_time(end)
 
-# Salva il file SRT finale
+# Salva l'SRT finale
 subs.save(output_file, encoding='utf-8')
 
 print(f"File SRT salvato come {output_file}")

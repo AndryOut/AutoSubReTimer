@@ -46,14 +46,11 @@ def main():
             str(input_file),
             "--language", config["default_values"]["language"],
             "--model", config["default_values"]["model"],
-            "--vad_filter", "True",
-            "--vad_method", "pyannote_onnx_v3",
+            "--standard_asia",
+            "--vad_method", "pyannote_v3",
             "--sentence",
-            "--word_timestamps", "True",
-            "--clip_timestamps", "1",
-            "--no_speech_threshold", "0.1",
-            "--condition_on_previous_text", "False",
-            "--vad_min_silence_duration_ms", "100",
+            "--patience", "1.5",
+            "--ff_vocal_extract", "mdx_kim2",
             "--output_dir", str(project_root)
         ]
         
