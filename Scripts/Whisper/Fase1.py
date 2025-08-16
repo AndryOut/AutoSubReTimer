@@ -50,7 +50,6 @@ def main():
             "--vad_method", "pyannote_v3",
             "--sentence",
             "--patience", "1.5",
-            "--ff_vocal_extract", "mdx_kim2",
             "--output_dir", str(project_root)
         ]
         
