@@ -20,7 +20,7 @@ Tip: If you're unsure about your CUDA version, open a terminal (cmd) and type "n
 
 Example:
 
-![3](https://github.com/user-attachments/assets/f099d468-b0e9-4fa6-980e-4307b727a414)
+![3](https://github.com/user-attachments/assets/b76a80e6-4d72-4d4f-84fb-6fb1c611fbf2)
 
 - Run "Auto Sub ReTimer GUI.bat".
 
