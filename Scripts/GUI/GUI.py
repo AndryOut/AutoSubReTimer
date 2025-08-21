@@ -1081,7 +1081,7 @@ def seleziona_funzione(funzione):
         if paths['available']['autosub']:
             instructions_text.insert("1.0",
                 "Auto Sub ReTimer\n\n"
-                "1. Make sure you have the episode renamed to ep.mkv in the Auto Sub ReTimer folder.\n"
+                "1. Make sure you have the video .mkv in the Auto Sub ReTimer folder.\n"
                 "\n"
                 "2. The line of spoken audio in the sub must be within the lines and not partially outside the line (audio spectrum).\n"
                 "There must not be the start of spoken audio that begins before the line, for example.\n"
@@ -1109,7 +1109,7 @@ def seleziona_funzione(funzione):
                 "Whisper\n\n"
                 "Automatic audio transcription:\n"
                 "\n"
-                "1. Make sure you have the episode renamed to ep.mkv in the Auto Sub ReTimer folder.\n"
+                "1. Make sure you have the video .mkv in the Auto Sub ReTimer folder.\n"
                 "\n"
                 "2. Faster-Whisper execution.\n"
                 "\n"

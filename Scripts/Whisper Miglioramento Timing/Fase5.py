@@ -10,7 +10,7 @@ TARGET_FILES = {
     'keep': [
         "Final.srt",          # Prima priorità
         "whisper_adjusted.srt",  # Seconda priorità
-        "ep.mkv"              # Terza priorità
+
     ],
     'cleanup': [
         "whisper.srt",
@@ -44,8 +44,16 @@ def cleanup_files(files, target_dir):
             pass
 
 def main():
+    # Cerca automaticamente il primo file MKV
+    mkv_files = [f for f in os.listdir(project_dir) if f.endswith('.mkv')]
+    if not mkv_files:
+        raise FileNotFoundError("Nessun file .mkv trovato nella directory.")
+    mkv_filename = mkv_files[0]
+
+    files_to_keep = TARGET_FILES['keep'] + [mkv_filename]
+
     # 1. Trova e sposta i file da conservare
-    existing_to_keep = find_existing_files(TARGET_FILES['keep'], project_dir)
+    existing_to_keep = find_existing_files(files_to_keep, project_dir)
     move_to_desktop(existing_to_keep, project_dir, desktop_dir)
     
     # 2. Elimina i file residui

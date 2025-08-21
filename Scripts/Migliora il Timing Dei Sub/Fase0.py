@@ -9,7 +9,6 @@ class SubtitleProcessor:
         self.root = Tk()
         self.root.withdraw()
         
-        # Tag configuration for sign detection
         self.STRONG_TAGS = [
             r'\\pos\([^)]+\)', r'\\org\([^)]+\)', r'\\kf\d+',
             r'\\move\([^)]+\)', r'\\clip\([^)]+\)', r'\\iclip\([^)]+\)',
@@ -26,14 +25,12 @@ class SubtitleProcessor:
                                'editor', 'speed', 'special', 'response', 
                                'operation', 'signature', 'sopra', 'subtitle', 'copy', 'copia']
         
-        # UI Setup
         self.setup_styles()
         
     def setup_styles(self):
         self.style = Style()
         self.style.theme_use('clam')
         
-        # Dark theme colors
         self.root.tk_setPalette(
             background='#333333',
             foreground='white',
@@ -61,10 +58,8 @@ class SubtitleProcessor:
         output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         
         if file_path.lower().endswith('.ass'):
-            # First process signs/dialogues/comments separation
             self.process_ass_file_separation(file_path, output_dir)
             
-            # Then process the dialogues for top alignment
             dialogues_path = os.path.join(output_dir, "Dialoghi.ass")
             if os.path.exists(dialogues_path):
                 self.process_ass_file_top_alignment(dialogues_path, output_dir)
@@ -116,7 +111,7 @@ class SubtitleProcessor:
             self.lines = lines
             self.choices = []
             self.button_pairs = []
-            self.line_indices = []  # Store original line indices
+            self.line_indices = []  
             
             self.setup_ui()
         
@@ -124,7 +119,6 @@ class SubtitleProcessor:
             self.parent.title("Review Ambiguous Lines")
             self.parent.geometry("1000x700")
             
-            # Main frame with scrollbar
             main_frame = Frame(self.parent)
             main_frame.pack(fill="both", expand=True, padx=10, pady=10)
             
@@ -136,16 +130,13 @@ class SubtitleProcessor:
             canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
             canvas.configure(yscrollcommand=scrollbar.set)
             
-            # Bind mouse wheel for scrolling
             canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
             
             canvas.pack(side="left", fill="both", expand=True)
             scrollbar.pack(side="right", fill="y")
             
-            # Add lines to review
             self.add_lines_to_review()
             
-            # Control buttons
             control_frame = Frame(self.parent, bg='#333333')
             control_frame.pack(fill="x", pady=10)
             
@@ -163,7 +154,6 @@ class SubtitleProcessor:
                     style_name = parts[3].strip()
                     text = parts[9].strip()
                     
-                    # Display style name and text
                     style_label = Label(frame, text=f"Style: {style_name}", 
                                       font=('Helvetica', 9, 'bold'), 
                                       bg='#444444', fg='white')
@@ -174,11 +164,9 @@ class SubtitleProcessor:
                                        bg='#444444', fg='white', anchor="w")
                     text_display.pack(fill="x", expand=True, padx=5)
                     
-                    # Choice variable and store original index
                     choice = IntVar(value=-1)
-                    self.choices.append((choice, line, i))  # Now storing index too
+                    self.choices.append((choice, line, i))  
                     
-                    # Choice buttons
                     btn_frame = Frame(frame, bg='#444444')
                     btn_frame.pack(side="right", padx=5)
                     
@@ -197,11 +185,9 @@ class SubtitleProcessor:
                     self.button_pairs.append((btn_sign, btn_dialogue))
         
         def make_choice(self, idx, choice):
-            # Reset both buttons
             self.button_pairs[idx][0].config(relief='flat', bg='#4CAF50')
             self.button_pairs[idx][1].config(relief='flat', bg='#F44336')
             
-            # Highlight selected button
             if choice == 1:
                 self.button_pairs[idx][0].config(relief='sunken', bg='#2E7D32')
                 self.choices[idx] = (IntVar(value=1), self.choices[idx][1], self.choices[idx][2])
@@ -210,12 +196,10 @@ class SubtitleProcessor:
                 self.choices[idx] = (IntVar(value=0), self.choices[idx][1], self.choices[idx][2])
         
         def confirm_choices(self):
-            # Check all choices are made
             for choice, _, _ in self.choices:
                 if choice.get() == -1:
                     return
             
-            # Create dictionaries to store the decisions by original index
             self.parent.choices_by_index = {idx: (line, choice.get()) 
                                           for choice, line, idx in self.choices}
             self.parent.completed = True
@@ -226,10 +210,9 @@ class SubtitleProcessor:
         with open(file_path, 'r', encoding='utf-8-sig') as f:
             lines = f.readlines()
 
-        # Extract sections
         header, styles, events = [], [], []
         current_section = None
-        special_styles = set()  # Contiene OP/ED/Episode/Title/Titolo/Sign/Cartelli
+        special_styles = set()  
         sign_keywords = {'sign', 'signs', 'cartello', 'cartelli'}
         episode_keywords = {'episode', 'ep', 'title', 'titolo'}
 
@@ -244,7 +227,6 @@ class SubtitleProcessor:
                 styles.append(line + '\n')
                 if line.startswith('Style:'):
                     style_name = line.split(',')[0].replace('Style:', '').strip().lower()
-                    # Aggiungi controllo per OP/ED/Episode/Title/Sign
                     if ('op' in style_name or 'ed' in style_name or 
                         'opening' in style_name or 'ending' in style_name or
                         any(keyword in style_name for keyword in sign_keywords) or
@@ -252,13 +234,12 @@ class SubtitleProcessor:
                         special_styles.add(style_name)
             elif current_section == '[Events]':
                 if line.startswith('Format:'):
-                    format_line = line + '\n'  # Salva SOLO la riga Format
+                    format_line = line + '\n'  
                 elif line.strip() == '[Events]':
                     pass 
                 else:
                     events.append((len(events), line + '\n'))
 
-        # Classification
         signs = {}
         dialogues = {}
         comments = {}
@@ -273,7 +254,6 @@ class SubtitleProcessor:
                     style = parts[3].strip().lower()
                     text = parts[9].strip()
                     
-                    # Check special styles (OP/ED/Episode/Title/Sign)
                     is_special_style = (style in special_styles or
                                        'opening' in style or 'ending' in style)
                     is_sign_style = any(keyword in style for keyword in sign_keywords)
@@ -296,16 +276,13 @@ class SubtitleProcessor:
             else:
                 dialogues[idx] = line
 
-        # Show review dialog if needed
         if ambiguous_lines:
             review_root = Tk()
             review_root.configure(bg='#333333')
-            # Pass only the lines, not the indices
             dialog = self.ReviewDialog(review_root, [line for idx, line in ambiguous_lines])
             review_root.mainloop()
             
             if hasattr(review_root, 'completed') and review_root.completed:
-                # Apply the choices while maintaining original order
                 for i, (idx, line) in enumerate(ambiguous_lines):
                     if i in review_root.choices_by_index:
                         line, choice = review_root.choices_by_index[i]
@@ -314,16 +291,13 @@ class SubtitleProcessor:
                         else:
                             dialogues[idx] = line
         
-        # Save files in original order
         self.save_separated_files(output_dir, header, styles, format_line, signs, dialogues, comments)
 
     def save_separated_files(self, output_dir, header, styles, format_line, signs, dialogues, comments):
         os.makedirs(output_dir, exist_ok=True)
         
-        # Combine all lines in original order
         all_indices = set(signs.keys()) | set(dialogues.keys()) | set(comments.keys())
         
-        # Prepare the three output files
         signs_lines = []
         dialogues_lines = []
         comments_lines = []
@@ -336,7 +310,6 @@ class SubtitleProcessor:
             if idx in comments:
                 comments_lines.append((idx, comments[idx]))
         
-        # Write files in original order
         for name, content in [
             ("Signs.ass", sorted(signs_lines, key=lambda x: x[0])),
             ("Dialoghi.ass", sorted(dialogues_lines, key=lambda x: x[0])),
@@ -435,13 +408,82 @@ class SubtitleProcessor:
     def find_alignments_in_dialogue(self, dialogue, top_alignments):
         dialogue_with_alignments = []
         for line in dialogue:
-            if any(alignment in line for alignment in top_alignments) or '{\\an8}' in line:
+            # Cerca tutti i tipi di allineamento top (7,8,9) in qualsiasi formato
+            if (any(alignment in line for alignment in ['\\an7', '\\an8', '\\an9', '{\\an7', '{\\an8', '{\\an9'])):
                 dialogue_with_alignments.append(line)
         return dialogue_with_alignments
 
+    def has_time_overlap(self, line1, line2):
+        try:
+           parts1 = line1.split(',', 10)
+           parts2 = line2.split(',', 10)
+        
+           if len(parts1) < 10 or len(parts2) < 10:
+               return False
+            
+           def parse_time(time_str):
+               h, m, s = time_str.split(':')
+               return int(h) * 3600 + int(m) * 60 + float(s)
+            
+           start1 = parse_time(parts1[1].strip())
+           end1 = parse_time(parts1[2].strip())
+           start2 = parse_time(parts2[1].strip())
+           end2 = parse_time(parts2[2].strip())
+        
+           return not (end1 <= start2 or end2 <= start1)
+        except:
+            return False
+
+    def insert_in_temporal_order(self, dialogue_list, new_line):
+        try:
+            parts_new = new_line.split(',', 10)
+            def parse_time(time_str):
+                h, m, s = time_str.split(':')
+                return int(h) * 3600 + int(m) * 60 + float(s)
+            new_start = parse_time(parts_new[1].strip())
+        
+            for i, existing_line in enumerate(dialogue_list):
+                parts_existing = existing_line.split(',', 10)
+                existing_start = parse_time(parts_existing[1].strip())
+            
+                if new_start < existing_start:
+                    dialogue_list.insert(i, new_line)
+                    return
+        
+            dialogue_list.append(new_line)
+        except:
+            dialogue_list.append(new_line)
+
+    def has_srt_time_overlap(self, sub1, sub2):
+        try:
+            return not (sub1.end <= sub2.start or sub2.end <= sub1.start)
+        except:
+            return False
+
+    def insert_srt_in_temporal_order(self, subs_list, new_sub):
+        try:
+            for i, existing_sub in enumerate(subs_list):
+                if new_sub.start < existing_sub.start:
+                    subs_list.insert(i, new_sub)
+                    return
+        
+            subs_list.append(new_sub)
+        except:
+            subs_list.append(new_sub)
+
     def filter_dialogue_by_style(self, dialogue, top_styles):
-        filtered_dialogue = [line for line in dialogue if line.split(',')[3].strip() in top_styles or '{\\an8}' in line]
-        discarded_dialogue = [line for line in dialogue if line.split(',')[3].strip() not in top_styles and '{\\an8}' not in line]
+        filtered_dialogue = []
+        discarded_dialogue = []
+    
+        for line in dialogue:
+            style_match = line.split(',')[3].strip() in top_styles if len(line.split(',')) > 3 else False
+            alignment_match = any(alignment in line for alignment in ['\\an7', '\\an8', '\\an9', '{\\an7', '{\\an8', '{\\an9'])
+        
+            if style_match or alignment_match:
+                filtered_dialogue.append(line)
+            else:
+                discarded_dialogue.append(line)
+    
         return filtered_dialogue, discarded_dialogue
 
     def write_discarded_ass_file(self, header, discarded_dialogue, format_line, file_path):
@@ -480,37 +522,164 @@ class SubtitleProcessor:
             if capture_styles:
                 styles_section.append(line)
 
-        # Usa le funzioni per filtrare i dialoghi
         top_styles = self.find_top_alignments(styles_section, dialogue_section)
         filtered_dialogue, discarded_dialogue = self.filter_dialogue_by_style(dialogue_section, top_styles)
+
+        final_ontop = []
+        final_dialogues = discarded_dialogue.copy()
+
+        # Controlla overlap tra dialoghi e sposta in ontop SOLO quella che inizia dopo
+        dialogue_overlaps = []
+        for i, dialog_line1 in enumerate(final_dialogues):
+            for j, dialog_line2 in enumerate(final_dialogues):
+                if i != j and self.has_time_overlap(dialog_line1, dialog_line2):
+                    # Determina quale riga inizia dopo
+                    parts1 = dialog_line1.split(',', 10)
+                    parts2 = dialog_line2.split(',', 10)
+                    if len(parts1) >= 10 and len(parts2) >= 10:
+                        def parse_time(time_str):
+                            h, m, s = time_str.split(':')
+                            return int(h) * 3600 + int(m) * 60 + float(s)
+                    
+                        start1 = parse_time(parts1[1].strip())
+                        start2 = parse_time(parts2[1].strip())
+                    
+                        # Sposta in ontop solo quella che inizia DOPO
+                        if start2 > start1:
+                            dialogue_overlaps.append(dialog_line2)
+                        elif start1 > start2:
+                            dialogue_overlaps.append(dialog_line1)
+                        else:
+                            # Se iniziano nello stesso momento, sposta la seconda (quella con indice maggiore)
+                            if j > i:
+                                dialogue_overlaps.append(dialog_line2)
+                            else:
+                                dialogue_overlaps.append(dialog_line1)
+                    break
+
+        # Sposta SOLO i dialoghi che iniziano dopo in ontop
+        for overlap_line in dialogue_overlaps:
+            if overlap_line in final_dialogues and overlap_line not in final_ontop:
+                final_dialogues.remove(overlap_line)
+                self.insert_in_temporal_order(final_ontop, overlap_line)
+
+        # Logica per le righe ontop
+        for ontop_line in filtered_dialogue:
+            has_overlap_with_dialogue = False
+            has_overlap_with_ontop = False
+    
+            # Controlla overlap con i dialoghi
+            for dialog_line in final_dialogues:
+                if self.has_time_overlap(ontop_line, dialog_line):
+                    has_overlap_with_dialogue = True
+                    break
+    
+            # Controlla overlap con altre righe ontop (solo se non c'è overlap con dialoghi)
+            if not has_overlap_with_dialogue:
+                for other_ontop_line in filtered_dialogue:
+                    if ontop_line != other_ontop_line and self.has_time_overlap(ontop_line, other_ontop_line):
+                        has_overlap_with_ontop = True
+                        break
+    
+            # Se c'è overlap con dialoghi OPPURE overlap con altre righe ontop, mantiene in ontop
+            if has_overlap_with_dialogue or has_overlap_with_ontop:
+                final_ontop.append(ontop_line)
+            else:
+                self.insert_in_temporal_order(final_dialogues, ontop_line)
 
         # Percorsi di output
         output_ass_file_path = os.path.join(output_dir, 'On Top.ass')
         output_srt_file_path = os.path.join(output_dir, 'Sub.srt')
         discarded_ass_file_path = os.path.join(output_dir, 'Dialoghi.ass')
 
-        # Scrive i file di output
-        self.write_ass_file(header_section, filtered_dialogue, format_line_events, output_ass_file_path)
-        self.write_srt_file_from_ass(discarded_dialogue, output_srt_file_path)
-        self.write_discarded_ass_file(header_section, discarded_dialogue, format_line_events, discarded_ass_file_path)
+        # Scrive i file deoutput
+        self.write_ass_file(header_section, final_ontop, format_line_events, output_ass_file_path)
+        self.write_srt_file_from_ass(final_dialogues, output_srt_file_path)
+        self.write_discarded_ass_file(header_section, final_dialogues, format_line_events, discarded_ass_file_path)
 
     # ==================== SRT Processing Functions ====================
     def process_srt_file(self, file_path, output_dir):
         subs = pysrt.open(file_path, encoding='utf-8')
-        filtered_subs = pysrt.SubRipFile()
-        discarded_subs = pysrt.SubRipFile()
+
+        ontop_subs = []
+        dialogue_subs = []
 
         for sub in subs:
-            if '\\an8' in sub.text:  # Filtra i sottotitoli con "{\an8}"
-                filtered_subs.append(sub)
+            # CERCA TUTTI I FORMATI POSSIBILI DI ALLINEAMENTO PER SRT
+            text = sub.text.lower()
+            has_alignment = (
+                '\\an8' in text or '\\an7' in text or '\\an9' in text or
+                '{\\an8' in text or '{\\an7' in text or '{\\an9' in text or
+                'an8' in text or 'an7' in text or 'an9' in text  # Per formati senza backslash
+            )
+    
+            if has_alignment:
+                ontop_subs.append(sub)
             else:
-                discarded_subs.append(sub)
+                dialogue_subs.append(sub)
+
+        # Logica di overlap temporale
+        final_ontop = pysrt.SubRipFile()
+        final_dialogues = pysrt.SubRipFile()
+
+        # Aggiunge prima i dialoghi
+        for sub in dialogue_subs:
+            final_dialogues.append(sub)
+
+        # Controlla overlap entre dialoghi e sposta in ontop SOLO quella che inizia dopo
+        dialogue_overlaps = []
+        for i, dialog_sub1 in enumerate(final_dialogues):
+            for j, dialog_sub2 in enumerate(final_dialogues):
+                if i != j and self.has_srt_time_overlap(dialog_sub1, dialog_sub2):
+                    # Determina quale sottotitolo inizia dopo
+                    if dialog_sub2.start > dialog_sub1.start:
+                        dialogue_overlaps.append(dialog_sub2)
+                    elif dialog_sub1.start > dialog_sub2.start:
+                        dialogue_overlaps.append(dialog_sub1)
+                    else:
+                        # Se iniziano nello stesso momento, sposta la seconda (quella con indice maggiore)
+                        if j > i:
+                            dialogue_overlaps.append(dialog_sub2)
+                        else:
+                            dialogue_overlaps.append(dialog_sub1)
+                    break
+
+        # Sposta SOLO i dialoghi che iniziano dopo in ontop
+        for overlap_sub in dialogue_overlaps:
+            if overlap_sub in final_dialogues and overlap_sub not in final_ontop:
+                final_dialogues.remove(overlap_sub)
+                self.insert_srt_in_temporal_order(final_ontop, overlap_sub)
+
+        # Logica per le righe ontop
+        for ontop_sub in ontop_subs:
+            has_overlap_with_dialogue = False
+            has_overlap_with_ontop = False
+    
+            # Controlla overlap con i dialoghi
+            for dialog_sub in final_dialogues:
+                if self.has_srt_time_overlap(ontop_sub, dialog_sub):
+                    has_overlap_with_dialogue = True
+                    break
+    
+            # Controlla overlap con altre righe ontop (solo se non c'è overlap con dialoghi)
+            if not has_overlap_with_dialogue:
+                for other_ontop_sub in ontop_subs:
+                    if ontop_sub != other_ontop_sub and self.has_srt_time_overlap(ontop_sub, other_ontop_sub):
+                        has_overlap_with_ontop = True
+                        break
+    
+            # Se c'è overlap con dialoghi OPPURE overlap con altre righe ontop, mantiene in ontop
+            if has_overlap_with_dialogue or has_overlap_with_ontop:
+                final_ontop.append(ontop_sub)
+            else:
+                # Inserisce in ordine temporale
+                self.insert_srt_in_temporal_order(final_dialogues, ontop_sub)
 
         filtered_output = os.path.join(output_dir, 'On Top.srt')
         discarded_output = os.path.join(output_dir, 'Sub.srt')
 
-        filtered_subs.save(filtered_output, encoding='utf-8')
-        discarded_subs.save(discarded_output, encoding='utf-8')
+        final_ontop.save(filtered_output, encoding='utf-8')
+        final_dialogues.save(discarded_output, encoding='utf-8')
 
 if __name__ == '__main__':
     processor = SubtitleProcessor()

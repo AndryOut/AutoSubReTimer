@@ -299,13 +299,19 @@ files_to_delete_option_2 = [
     "On Top.srt"
 ]
 
+# MKV
+mkv_files = [f for f in os.listdir(project_path) if f.endswith('.mkv')]
+if not mkv_files:
+    raise FileNotFoundError("Nessun file .mkv trovato nella directory.")
+mkv_filename = mkv_files[0]
+
 files_to_move_option_1 = [
-    "ep.mkv",
+    mkv_filename,
     "Final.ass"
 ]
 
 files_to_move_option_2 = [
-    "ep.mkv",
+    mkv_filename,
     "Final.srt"
 ]
 
@@ -318,7 +324,7 @@ try:
             sposta_file(files_to_move_option_1, project_path, desktop_path)
             elimina_file(files_to_delete_option_1, project_path)
         else:
-            files_to_move = ["ep.mkv", "Final.ass"]
+            files_to_move = [mkv_filename, "Final.ass"]
             for file in ["On Top.ass", "Comments.ass", "Signs.ass"]:
                 file_path = os.path.join(project_path, file)
                 if not is_file_empty(file_path):
@@ -338,7 +344,7 @@ try:
             sposta_file(files_to_move_option_2, project_path, desktop_path)
             elimina_file(files_to_delete_option_2, project_path)
         else:
-            files_to_move = ["ep.mkv", "Final.srt"]
+            files_to_move = [mkv_filename, "Final.srt"]
             on_top_path = os.path.join(project_path, "On Top.srt")
             if not is_file_empty(on_top_path):
                 files_to_move.append("On Top.srt")

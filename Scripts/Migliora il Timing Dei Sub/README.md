@@ -16,7 +16,7 @@ Separate from uploaded .srt sub:
 Values you can modify: None.
 
 Fase1.py:
-- Extracts audio from "ep.mkv", passes it to demucs which extracts vocals with the CPU (3/5 minutes) or with GPU (30/40 seconds).
+- Extracts audio from the video .mkv, passes it to demucs which extracts vocals with the CPU (3/5 minutes) or with GPU (30/40 seconds).
 - Now there is no need to use the site anymore, it does everything automatically locally, make sure you have the right cuda version installed for you in the "main" folder to use GPU.
 
 Values you can modify: None.

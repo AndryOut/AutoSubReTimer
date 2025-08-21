@@ -6,17 +6,17 @@ import torch
 # Percorso relativo al progetto
 project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-# Nome del file MKV di input
-input_file = "ep.mkv"
+# MKV
+mkv_files = [f for f in os.listdir(project_path) if f.endswith('.mkv')]
+if not mkv_files:
+    print(f"Errore: Nessun file .mkv trovato nella directory '{project_path}'.")
+    exit()
 
-# Directory di input/output basata su project_path
+input_file = mkv_files[0]
 input_path = os.path.join(project_path, input_file)
 output_dir = project_path
 
-# Verifica che il file MKV esista
-if not os.path.isfile(input_path):
-    print(f"Errore: Il file '{input_file}' non esiste nella directory '{project_path}'.")
-    exit()
+print(f"Trovato file: {input_file}")
 
 # Percorso relativo per FFmpeg
 ffmpeg_path = os.path.join(project_path, "ffmpeg", "bin", "ffmpeg.exe")

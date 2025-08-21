@@ -139,10 +139,12 @@ def process_segment(args):
         return []
 
 def main():
-    # Percorso del file video
-    video_path = os.path.join(project_path, "ep.mkv")
-    if not os.path.exists(video_path):
-        raise FileNotFoundError("Il file video non è stato trovato.")
+    # MKV
+    mkv_files = [f for f in os.listdir(project_path) if f.endswith('.mkv')]
+    if not mkv_files:
+        raise FileNotFoundError("Nessun file .mkv trovato nella directory.")
+    video_path = os.path.join(project_path, mkv_files[0])
+    print(f"Trovato video: {mkv_files[0]}")
 
     # Percorso del file SRT dei sottotitoli
     srt_path = os.path.join(project_path, "adjusted_Sub.srt")

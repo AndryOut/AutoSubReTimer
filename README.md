@@ -16,7 +16,7 @@ Tip: If you're unsure about your CUDA version, open a terminal (cmd) and type "n
 
 - Save and you're done!
 
-- Put your episode renamed to "ep.mkv" inside the "Auto Sub ReTimer" folder.
+- Put your video .mkv inside the "Auto Sub ReTimer" folder.
 
 Example:
 
@@ -76,7 +76,7 @@ To use whisper.
 
 REQUIREMENTS
 
-- Put your episode renamed to "ep.mkv" inside the "Auto Sub ReTimer" folder.
+- Put your video .mkv inside the "Auto Sub ReTimer" folder.
 
 - Run "Auto Sub ReTimer GUI.bat" and use "Whisper".
 
