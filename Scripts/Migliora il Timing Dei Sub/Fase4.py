@@ -94,7 +94,7 @@ def adjust_sub_start_based_on_scene_change(original_subs, scene_subs):
 def add_lead_in_to_peaks(subs, audio_peaks):
     min_lead_in = 10
     max_lead_in = 20
-    additional_lead_in = 100
+    additional_lead_in = 30
 
     for idx, sub in enumerate(subs):
         sub_start = sub.start.ordinal
