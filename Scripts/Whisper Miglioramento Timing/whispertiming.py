@@ -116,7 +116,7 @@ def add_lead_out_to_peak_or_next(subs, audio_file, lead_out=400, max_gap=300):
     return subs
 
 # Funzione per collegare segmenti senza overlap con spazio di 0,000 secondi
-def adjust_segments_for_overlap(segments, max_lead_out=200, lead_in=30, max_lead_in=50, lead_out=100):
+def adjust_segments_for_overlap(segments, max_lead_out=0, lead_in=0, max_lead_in=0, lead_out=0):
     adjusted_segments = []
     for i in range(len(segments) - 1):
         start, end = segments[i]

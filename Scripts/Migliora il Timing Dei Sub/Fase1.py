@@ -13,7 +13,7 @@ if not mkv_files:
     exit()
 input_file = mkv_files[0]
 
-# Directory di input/output basata su project_path
+# Directory input, output
 input_path = os.path.join(project_path, input_file)
 output_dir = project_path
 
@@ -22,7 +22,7 @@ if not os.path.isfile(input_path):
     print(f"Errore: Il file '{input_file}' non esiste nella directory '{project_path}'.")
     exit()
 
-# Percorso relativo per FFmpeg
+# Percorso FFmpeg
 ffmpeg_path = os.path.join(project_path, "ffmpeg", "bin", "ffmpeg.exe")
 
 # Verifica che FFmpeg esista
@@ -30,41 +30,95 @@ if not os.path.isfile(ffmpeg_path):
     print(f"Errore: FFmpeg non trovato nel percorso '{ffmpeg_path}'.")
     exit()
 
-input_for_demucs = input_path
+def get_audio_channels(file_path, ffmpeg_path):
+    try:
+        ffprobe_path = ffmpeg_path.replace("ffmpeg.exe", "ffprobe.exe")
+        
+        cmd = [
+            ffprobe_path,
+            "-v", "error",
+            "-select_streams", "a:0", 
+            "-show_entries", "stream=channels",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            file_path
+        ]
+        
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        if result.returncode == 0:
+            channels_str = result.stdout.decode().strip()
+            if channels_str.isdigit():
+                return int(channels_str)
+            else:
+                print(f"Output ffprobe non valido: {channels_str}")
+        else:
+            print(f"FFprobe error: {result.stderr.decode()}")
+            
+    except Exception as e:
+        print(f"Errore ffprobe: {e}")
+    
+    return None
 
-# Percorso per l'eseguibile Python dell'ambiente virtuale
+# Verifica i canali audio
+channels = get_audio_channels(input_path, ffmpeg_path)
+
+if channels is None:
+    print("Errore: Impossibile determinare i canali audio. Utilizzo diretto del file.")
+    input_for_demucs = input_path
+elif channels == 2:
+    print("Audio già a 2 canali stereo. Utilizzo diretto del file.")
+    input_for_demucs = input_path
+else:  
+    print(f"Audio a {channels} canali. Conversione in stereo 2 canali...")
+    temp_wav = os.path.join(output_dir, "temp_demucs.wav")
+
+    ffmpeg_convert_cmd = [
+        ffmpeg_path,
+        "-hide_banner",
+        "-i", input_path,
+        "-vn", "-sn", "-dn",  
+        "-c:a", "pcm_s16le",  
+        "-ar", "44100",       
+        "-ac", "2",       
+        "-threads", "0",
+        "-y",                 
+        temp_wav
+    ]
+
+    subprocess.run(ffmpeg_convert_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    input_for_demucs = temp_wav
+
 python_executable = os.path.join(project_path, "main", "Scripts", "python.exe")
 
 # Verifica se CUDA è disponibile e imposta device
 device = "cuda" if torch.cuda.is_available() else "cpu"
-if device == "cuda":
-    print("Elaborazione su GPU (CUDA)...")
-else:
-    print("CUDA non disponibile. Elaborazione su CPU (più lenta)...")
 
 # Comando per eseguire Demucs con device dinamico
 os.environ['PATH'] += os.pathsep + os.path.join(project_path, "ffmpeg", "bin")
-demucs_command = f'"{python_executable}" -m demucs --two-stems=vocals --clip-mode clamp --float32 --jobs 2 -d {device} -o "{output_dir}" "{input_path}"'
+demucs_command = f'"{python_executable}" -m demucs --two-stems=vocals --clip-mode clamp --float32 --jobs 2 -d {device} -o "{output_dir}" "{input_for_demucs}"'
 
 try:
-    print(f"Esecuzione di Demucs: {demucs_command}")
     subprocess.run(demucs_command, check=True)
 
     # Percorso della cartella generata automaticamente da Demucs
-    demucs_output_dir = os.path.join(output_dir, "htdemucs", os.path.splitext(os.path.basename(input_path))[0])
+    demucs_output_dir = os.path.join(output_dir, "htdemucs", os.path.splitext(os.path.basename(input_for_demucs))[0])
 
     # Sposta il file `vocals.wav` nella directory principale, rinominandolo in "vocali.wav"
     vocals_file = os.path.join(demucs_output_dir, "vocals.wav")
     renamed_vocals_file = os.path.join(output_dir, "vocali.wav")
     if os.path.exists(vocals_file):
         shutil.move(vocals_file, renamed_vocals_file)
-        print(f"`vocals.wav` rinominato in: {renamed_vocals_file}")
 
-    # Rimuovi la cartella `htdemucs`
+    # Rimuove la cartella `htdemucs`
     shutil.rmtree(os.path.join(output_dir, "htdemucs"))
-    print("Cartella `htdemucs` eliminata.")
 
-    print("Operazione completata! Rimasto solo `vocali.wav` nella directory principale.")
+    # Pulizia file temporaneo solo se è stato creato
+    if input_for_demucs != input_path and os.path.exists(input_for_demucs):
+        os.remove(input_for_demucs)
+
 except subprocess.CalledProcessError as e:
     print(f"Errore durante l'esecuzione di Demucs: {e}")
+    # Pulizia file temporaneo solo se è stato creato
+    if input_for_demucs != input_path and os.path.exists(input_for_demucs):
+        os.remove(input_for_demucs)
     exit()
