@@ -1,33 +1,30 @@
 import os
 import shutil
 
-# Configurazione percorsi
+# Percorsi
 project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 desktop_dir = os.path.join(os.path.expanduser("~"), "Desktop")
 
-# File da gestire (in ordine di priorità)
+# File da gestire
 TARGET_FILES = {
     'keep': [
-        "Final.srt",          # Prima priorità
-        "whisper_adjusted.srt",  # Seconda priorità
+        "Final.srt",          
+        "whisper_adjusted.srt",  
 
     ],
     'cleanup': [
         "whisper.srt",
         "whisper.aac", 
         "vocali.wav",
-        "temp.wav",
         "scene_timestamps.srt",
         "scene_timestamps_adjusted.srt"
     ]
 }
 
 def find_existing_files(file_list, search_dir):
-    """Cerca i file esistenti senza output"""
     return [f for f in file_list if os.path.exists(os.path.join(search_dir, f))]
 
 def move_to_desktop(files, source_dir, dest_dir):
-    """Sposta i file sul Desktop senza output"""
     for filename in files:
         try:
             shutil.move(os.path.join(source_dir, filename), 
@@ -36,7 +33,6 @@ def move_to_desktop(files, source_dir, dest_dir):
             pass
 
 def cleanup_files(files, target_dir):
-    """Elimina i file residui senza output"""
     for filename in files:
         try:
             os.remove(os.path.join(target_dir, filename))
@@ -44,7 +40,7 @@ def cleanup_files(files, target_dir):
             pass
 
 def main():
-    # Cerca automaticamente il primo file MKV
+    # Cerca MKV
     mkv_files = [f for f in os.listdir(project_dir) if f.endswith('.mkv')]
     if not mkv_files:
         raise FileNotFoundError("Nessun file .mkv trovato nella directory.")
