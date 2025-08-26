@@ -33,24 +33,24 @@ audio_file = "whisper.aac"
 audio_path = os.path.join(output_dir, audio_file)
 
 # Comando ffprobe per verificare il codec audio del file input
-ffprobe_command = f'"{ffprobe_path}" -hide_banner -loglevel error -select_streams a -show_entries stream=codec_name -of csv=p=0 "{input_path}"'
+ffprobe_command = f'"{ffprobe_path}" -hide_banner -select_streams a -show_entries stream=codec_name -of csv=p=0 "{input_path}"'
 
 try:
     print("Verifica del codec audio del file di input...")
-    result = subprocess.run(ffprobe_command, shell=True, check=True, stdout=subprocess.PIPE, text=True)
+    result = subprocess.run(ffprobe_command, check=True, stdout=subprocess.PIPE, text=True)
     codec = result.stdout.strip()
     print(f"Codec rilevato: {codec}")
 
     # Se il file è già in formato AAC, lo estrae
     if codec == "aac":
         print("L'audio è già in formato AAC. Estrazione senza conversione...")
-        ffmpeg_command = f'"{ffmpeg_path}" -hide_banner -loglevel error -i "{input_path}" -vn -acodec copy "{audio_path}"'
+        ffmpeg_command = f'"{ffmpeg_path}" -hide_banner -vn -sn -dn -threads 0 -i "{input_path}" -vn -acodec copy "{audio_path}"'
     else:
         # Converte l'audio in formato AAC
         print("Convertendo l'audio in formato AAC...")
-        ffmpeg_command = f'"{ffmpeg_path}" -hide_banner -loglevel error -i "{input_path}" -vn -acodec aac -b:a 192k "{audio_path}"'
+        ffmpeg_command = f'"{ffmpeg_path}" -hide_banner -i "{input_path}" -vn -sn -dn -acodec aac -b:a 192k -ac 2 -threads 0 "{audio_path}"'
 
-    subprocess.run(ffmpeg_command, shell=True, check=True)
+    subprocess.run(ffmpeg_command, check=True)
     print(f"Operazione completata. File audio salvato come: {audio_path}")
 
 except subprocess.CalledProcessError as e:

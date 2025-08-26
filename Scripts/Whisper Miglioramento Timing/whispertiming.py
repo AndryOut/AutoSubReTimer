@@ -23,22 +23,14 @@ def milliseconds_to_subrip_time(milliseconds):
 
 # Funzione per rilevare i segmenti audio
 def get_audio_segments(audio_file, silence_threshold=320):
-    audio = AudioSegment.from_file(audio_file)
-    temp_audio_file = os.path.join(project_dir, "temp.wav")
-    audio.export(temp_audio_file, format="wav")
+    y, sr = librosa.load(audio_file, sr=None)
 
-    # Carica l'audio con Librosa
-    temp_audio_file = os.path.join(project_dir, "temp.wav")
-    y, sr = librosa.load(temp_audio_file, sr=None)
-
-    # Rileva i segmenti non silenziosi
     intervals = librosa.effects.split(y, top_db=25)
 
-    # Converte i segmenti in millisecondi
     segments = []
     for start, end in intervals:
         segments.append((start / sr * 1000, end / sr * 1000))
-
+    
     return segments
 
 # Funzione cercare i picchi precedenti e aggiungere lead-in partendo dal picco trovato
