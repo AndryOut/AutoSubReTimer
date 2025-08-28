@@ -28,6 +28,10 @@ execution_time_label = None
 root = ctk.CTk()
 root.title("Auto Sub ReTimer")
 root.geometry("1000x700")
+root.update_idletasks()
+x = (root.winfo_screenwidth() // 2) - (1000 // 2)
+y = (root.winfo_screenheight() // 2) - (700 // 2)
+root.geometry(f"1000x700+{x}+{y}")
 
 # --------------------------------------------------
 # FUNZIONI PER LA GESTIONE DELLA CONFIGURAZIONE
@@ -52,10 +56,10 @@ def mostra_config_fase2():
                 config = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             config = {
-                "picco_audio_threshold": 200,
-                "max_range_picco": 600,
-                "lead_in": 200,
-                "lead_out": 500
+                "picco_audio_threshold": 400,
+                "max_range_picco": 700,
+                "lead_in": 175,
+                "lead_out": 410
             }
         
         config_frame = ctk.CTkFrame(frame_center)
@@ -135,8 +139,8 @@ def mostra_config_fase4():
         except (FileNotFoundError, json.JSONDecodeError):
             config = {
                 "max_range_next_scene": 300,
-                "gap_threshold": 230,
-                "scene_change_before_threshold": 200,
+                "gap_threshold": 280,
+                "scene_change_before_threshold": 240,
                 "scene_change_after_threshold": 200
             }
         
@@ -460,10 +464,18 @@ def setup_paths():
         if not os.path.exists(paths['whisper_scripts']['exe_file']):
             missing_paths.append(f"Faster-Whisper file not found: {paths['whisper_scripts']['exe_file']}")
             paths['available']['whisper'] = False
+            paths['available']['retimer'] = False
             
         if not os.path.exists(paths['whisper_scripts']['venv_python']):
             missing_paths.append(f"Python virtualenv not found: {paths['whisper_scripts']['venv_python']}")
             paths['available']['whisper'] = False
+            paths['available']['retimer'] = False
+
+        if paths['available']['whisper']:
+            for name, path in paths['whisper_retimer'].items():
+                if not os.path.exists(path):
+                    missing_paths.append(f"Whisper ReTimer script not found: {path}")
+                    paths['available']['retimer'] = False
 
         if missing_paths:
             messagebox.showwarning("Warning", 
@@ -502,6 +514,10 @@ class InputHandler:
         dialog.geometry("500x200")
         dialog.transient(self.root)
         dialog.grab_set()
+        dialog.update_idletasks()
+        x = (dialog.winfo_screenwidth() // 2) - (500 // 2)
+        y = (dialog.winfo_screenheight() // 2) - (200 // 2)
+        dialog.geometry(f"+{x}+{y}")
         
         label = ctk.CTkLabel(dialog, text=question, font=("Arial", 12))
         label.pack(pady=20)
@@ -512,7 +528,7 @@ class InputHandler:
         for idx, option in enumerate(options, 1):
             btn = ctk.CTkButton(
                 btn_frame,
-                text=f"{idx}: {option}",
+                text=option,
                 command=lambda opt=idx: self._set_response(opt, dialog),
                 width=120
             )
@@ -962,6 +978,8 @@ def esegui_whisper_retimer():
     
     is_running = True
     button_avvia.configure(state="disabled")
+    input_handler.response = None
+    input_handler.event.clear()
     log_text.configure(state="normal")
     log_text.delete("1.0", "end")
     log_text.insert("end", "🚀 Starting Whisper ReTimer process...\n")

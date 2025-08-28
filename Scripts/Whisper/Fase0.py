@@ -44,11 +44,11 @@ try:
     # Se il file è già in formato AAC, lo estrae
     if codec == "aac":
         print("L'audio è già in formato AAC. Estrazione senza conversione...")
-        ffmpeg_command = f'"{ffmpeg_path}" -hide_banner -vn -sn -dn -threads 0 -i "{input_path}" -vn -acodec copy "{audio_path}"'
+        ffmpeg_command = f'"{ffmpeg_path}" -hide_banner -y -vn -sn -dn -threads 0 -i "{input_path}" -acodec copy "{audio_path}"'
     else:
         # Converte l'audio in formato AAC
         print("Convertendo l'audio in formato AAC...")
-        ffmpeg_command = f'"{ffmpeg_path}" -hide_banner -i "{input_path}" -vn -sn -dn -acodec aac -b:a 192k -ac 2 -threads 0 "{audio_path}"'
+        ffmpeg_command = f'"{ffmpeg_path}" -hide_banner -y -i "{input_path}" -vn -sn -dn -acodec aac -b:a 192k -ac 2 -threads 0 "{audio_path}"'
 
     subprocess.run(ffmpeg_command, check=True)
     print(f"Operazione completata. File audio salvato come: {audio_path}")

@@ -1,10 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: Vai nella directory dello script
 cd /d "%~dp0"
 
-:: Disabilita controllo della versione pip e silenzia output pip
 set PIP_DISABLE_PIP_VERSION_CHECK=1
 set PIP_QUIET=1
 
@@ -12,7 +10,6 @@ set script_folder=Scripts\GUI
 set launcher_file=%script_folder%\GUI.py
 set torch_installed_flag=main\.torch_installed
 
-:: Controlla se esiste la cartella "main" (ambiente virtuale)
 if not exist main (
     echo Creating the "main" folder...
     python\python.exe -m venv main
@@ -23,7 +20,6 @@ if not exist main (
     main\Scripts\python.exe -m pip install pysrt --use-pep517 --quiet
 )
 
-:: Chiedi se installare CUDA solo se il flag non esiste
 if not exist "%torch_installed_flag%" (
     :ask_cuda
     echo.
@@ -50,11 +46,15 @@ if not exist "%torch_installed_flag%" (
     )
 )
 
+if exist main if exist "%torch_installed_flag%" if not defined IS_MINIMIZED (
+    set IS_MINIMIZED=1
+    start "" /min cmd /c "%~dpnx0" %*
+    exit
+)
+
 if exist "%launcher_file%" (
     echo Starting the Gui....
     call main\Scripts\python.exe "%launcher_file%"
 ) else (
     echo ERROR: Unable to find GUI.py in "%launcher_file%".
 )
-
-pause
