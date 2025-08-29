@@ -53,7 +53,6 @@ if exist main if exist "%torch_installed_flag%" if not defined IS_MINIMIZED (
 )
 
 if exist "%launcher_file%" (
-    echo Starting the Gui....
     call main\Scripts\python.exe "%launcher_file%"
 ) else (
     echo ERROR: Unable to find GUI.py in "%launcher_file%".
