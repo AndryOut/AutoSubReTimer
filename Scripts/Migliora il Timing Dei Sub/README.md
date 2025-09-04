@@ -1,129 +1,142 @@
-What exactly do the "Fasi.py" scripts do?  
+## Overview of the Phases
 
-Fase0.py:  
-Separate from uploaded .ass sub (No need to manually sort everything anymore, the program does it all for you):
+| Script     | Main Function | Editable Values |
+|------------|---------------|-----------------|
+| **Fase0.py** | Separates subtitles into categories (.ass and .srt) | No |
+| **Fase1.py** | Extracts audio and separates voice using [Demucs](https://github.com/facebookresearch/demucs) – MIT License | No |
+| **Fase2.py** | Adjusts lead‑in/out based on audio peaks | Yes (4 values) |
+| **Fase3.py** | Detects scene changes using [PySceneDetect](https://github.com/Breakthrough/PySceneDetect) – BSD 3‑Clause License | No |
+| **Fase4.py** | Aligns subtitles to scene changes | Yes (4 values) |
+| **Fase5.py** | Rebuilds final file with original styles | No |
+| **Fase6.py** | Cleans up and moves final files | No |
 
-- "Signs": Contains all signs, opening and ending subtitles (necessary separation to adjust dialogue timing).
+## What exactly do the "Fasi.py" scripts do? 
 
-- "Comments": Contains commented lines and empty lines (necessary separation to adjust dialogue timing).
+## **Fase0.py**
+Separates the loaded subtitles into different categories:
 
-- "On Top": Contains all dialogues positioned at the top of the screen (necessary separation to adjust dialogue timing).
+- **For .ass files**:
+  - **Signs**: signs, opening, and ending.
+  - **Comments**: commented and empty lines.
+  - **On Top**: dialogues positioned at the top of the screen.
+- **For .srt files**:
+  - **On Top**: dialogues positioned at the top of the screen.
 
-Separate from uploaded .srt sub:
+**Editable values:** None.
 
-- "On Top": Contains all dialogues positioned at the top of the screen (necessary separation to adjust dialogue timing). 
+## **Fase1.py**
+- Extracts audio from the `.mkv` file.
+- Passes the audio to [Demucs](https://github.com/facebookresearch/demucs) to separate the voice track:
+  - **CPU**: ~3–5 minutes
+  - **GPU**: ~30–40 seconds (requires the correct CUDA version in the `main` folder).
+- All processing is done locally — no external services are used.
 
-Values you can modify: None.
+**Editable values:** None.
 
-Fase1.py:
-- Extracts audio from the video .mkv, passes it to demucs which extracts vocals with the CPU (3/5 minutes) or with GPU (30/40 seconds).
-- Now there is no need to use the site anymore, it does everything automatically locally, make sure you have the right cuda version installed for you in the "main" folder to use GPU.
+## **Fase2.py**
+- Analyzes audio peaks to remove and reapply lead‑in/out.
+- Merges lines with a gap of `0.000s` to maintain continuity.
 
-[Demucs](https://github.com/facebookresearch/demucs) — MIT License
+**Editable values:** 4
 
-Values you can modify: None.
-
-Fase2.py:  
-- Based on the audio peaks of spoken audio, removes the lead-in-out and resets them according to values that can be changed as per your preference.  
-- Joins close lines with a space of 0.000 seconds between them for better continuity.  
-
-Values you can modify: 4.  
-
-Value 1 "Peak detection margin after initial timestamp (ms)":  
+#### 1. Peak detection margin after initial timestamp (ms)
 
 ![1](https://github.com/user-attachments/assets/4f44dde5-b04e-4318-b9c4-b7a7925b38dc)
 
-This sets a margin to detect the first audio peak of speech after the line’s initial timestamp.
-It’s mainly used to remove lead-in from subtitles and then reapply it based on your personal settings. (Recommended value: 400-500)  
+Sets a margin to detect the first audio peak of speech **after** the line’s initial timestamp.  
+Mainly used to remove lead‑in from subtitles, then reapply it based on your personal settings.  
+**Recommended value:** 400–500 ms. 
 
-Example with 200 milliseconds:  
+**Example with 200 milliseconds:**
 
 ![Fase2 1 200](https://github.com/user-attachments/assets/d690943a-c353-41cf-8462-16208599f29d)
 
-Here, the value 200 is more than enough to detect the first audio peak after the line's initial timestamp.  
-The distance from the first arrow (line's initial timestamp) to the second arrow (first audio peak) falls within the 200-millisecond range.  
-If the distance of the audio peak is farther from the line's initial timestamp, you can increase this value.  
+Here, 200 ms is enough to detect the first audio peak after the line's initial timestamp.  
+The distance from the first arrow (line's initial timestamp) to the second arrow (first audio peak) falls within the 200 ms range.  
+If the audio peak is farther from the initial timestamp, increase this value.
 
-Value 2 "Peak detection margin before final timestamp (ms)":  
+#### 2. Peak detection margin before final timestamp (ms)
 
 ![1](https://github.com/user-attachments/assets/866a6f7b-59ec-4ed6-b28b-ba44c519c589)
 
-This sets a margin to detect the first audio peak of speech before the line’s end timestamp.
-It’s mainly used to remove lead-out from subtitles and then reapply it based on your personal settings. (Recommended value: 700+)  
+Sets a margin to detect the first audio peak of speech **before** the line’s end timestamp.  
+Mainly used to remove lead‑out from subtitles, then reapply it based on your personal settings.  
+**Recommended value:** 700+ ms.
 
-Example with 600 milliseconds:  
+**Example with 600 milliseconds:**
 
 ![Fase2 2 600](https://github.com/user-attachments/assets/73264ebd-2543-4a74-885d-3c2208446b8a)
 
-Here, the value 600 is more than enough to detect the first audio peak before the line's final timestamp.  
-The distance from the first arrow (first audio peak) to the second arrow (line's final timestamp) falls within the 600-millisecond range.  
-If the distance of the audio peak is farther from the line's final timestamp, you can increase this value.  
+Here, 600 ms is enough to detect the first audio peak before the line's final timestamp.  
+The distance from the first arrow (first audio peak) to the second arrow (line's final timestamp) falls within the 600 ms range.  
+If the audio peak is farther from the final timestamp, increase this value.
 
-Value 3-4 "Add Lead-in" - "Add Lead-out":  
+#### 3–4. Add Lead‑in / Add Lead‑out
 
 ![1](https://github.com/user-attachments/assets/11e89b62-b6a7-43ec-8663-eb7ae2ab9c7c)
 
-You can set your preferred lead-in and lead-out values here. (Recommended: Lead-in 170-180, Lead-out 400-450)
+Set your preferred lead‑in and lead‑out values here.  
+**Recommended:** Lead‑in 170–180 ms, Lead‑out 400–450 ms.
 
-If audio peaks in "Peak detection margin after initial timestamp (ms)" and "Peak detection margin before final timestamp (ms)" are not detected because the value was set too low, then the lead-in and lead-out will still be added, resulting in longer lines. Simply increase the peak detection values to address these overly long lines.
+If audio peaks in the two detection margins above are **not** detected because the values are too low, the lead‑in and lead‑out will still be added resulting in longer lines.  
+To fix overly long lines, increase the peak detection values.
 
-Fase3.py:  
-- Detects scene changes and saves them in a .srt file, which will then be used by "Fase4.py".  
+## **Fase3.py**
+- Detects scene changes and saves them in a `.srt` file, which will then be used by **Fase4.py**.  
+- Uses [PySceneDetect](https://github.com/Breakthrough/PySceneDetect)
 
-[PySceneDetect](https://github.com/Breakthrough/PySceneDetect) — BSD 3-Clause License
+**Editable values:** None.
 
-Values you can modify: None.
-
-Fase4.py:  
+## **Fase4.py**
 - Ensures that lines respect scene changes where possible.  
-(It may cut a part of the spoken audio if "Fase3" has detected nonexistent scene changes.)  
-- Adds lead-in to lines with low CPM adjusted to a scene change to prevent the line from lasting too short on-screen.  
-- Joins lines with 0.000 seconds if there is a gap of silence between lines within a range of 0.300 seconds.  
+  *(May cut part of the spoken audio if Fase3 detected false scene changes.)*  
+- Adds lead‑in to low‑CPM lines adjusted to a scene change, to prevent them from disappearing too quickly.  
+- Joins lines with `0.000s` gap if the silence between them is within 0.300 seconds.
 
-Values you can modify: 4.  
+**Editable values:** 4
 
-Value 1 "Max range to detect a scene change from the final timestamp (ms)":  
+#### 1. Max range to detect a scene change from the final timestamp (ms)
 
 ![fase4](https://github.com/user-attachments/assets/e614e08e-89ee-4bec-85e0-7a082e41e708)
 
-This value detects a scene change (keyframe) after a line’s end timestamp.
-The margin checks if there’s a scene change after applying the lead-out set in "Fase2 Configuration".
-For example, if you set the lead-out to 450 (Fase2), the maximum range would be 750ms (450±300 if a scene change is detected).
+Detects a scene change (keyframe) **after** a line’s end timestamp.  
+The margin checks for a scene change after applying the lead‑out set in Fase2.  
+Example: Lead‑out 450 ms (Fase2) → max range 750 ms (450 ± 300 if a scene change is detected).
 
-Value 2 "Max gap 'empty' between two lines to attach (ms)":
+#### 2. Max gap 'empty' between two lines to attach (ms)
 
 ![fase4](https://github.com/user-attachments/assets/6d424b8a-aad4-4856-8f07-d2cdf717e37e)
 
-This controls the distance between two lines. If the next line is within 250-300 (recommended), they’ll be merged for smoother reading. If the gap is larger, they won’t be joined.
-This indirectly depends on your lead-in/lead-out values in "Fase2 Configuration".
+Controls the distance between two lines.  
+If the next line starts within 250–300 ms (recommended), they will be merged for smoother reading.  
+Indirectly depends on your lead‑in/lead‑out values in Fase2.
 
-Value 3 "Max range to detect scene change before the initial timestamp (ms):"
+#### 3. Max range to detect scene change before the initial timestamp (ms)
 
 ![fase4](https://github.com/user-attachments/assets/840ae9ef-b171-4fdb-b0d5-044ac1bef798)
 
-This determines whether to link a scene change (keyframe) found before the line’s initial timestamp, based on the set margin (200-250 recommended).
-For example, if a scene change is detected within 250 before the line starts, it will be linked. If it’s beyond this margin, it won’t.
-This indirectly depends on your lead-in value in "Fase2 Configuration".
-For example: Lead-in 180 (Fase2), Max range 250. That is, 180±250, so a maximum of 430ms is possible if a scene change is detected.
+Checks for a scene change **before** the line’s start, within the set margin (200–250 ms recommended).  
+Example: Lead‑in 180 ms (Fase2) + Max range 250 ms → up to 430 ms possible if a scene change is detected.
 
-Value 4 "Max range to detect scene change after the initial timestamp (ms):"
+#### 4. Max range to detect scene change after the initial timestamp (ms)
 
 ![fase4](https://github.com/user-attachments/assets/e1cd1def-68ae-4b99-a205-214ab6c6ed44)
 
-This determines whether to link a scene change (keyframe) found after the line’s initial timestamp, based on the set margin.
-For example, if a scene change is detected within 200 (recommended) after the line starts, it will be linked. If it’s beyond this margin, it won’t (this is rarer than the previous case, but the program will handle it if needed).
-This indirectly depends on your lead-in value in "Fase2 Configuration".
+Checks for a scene change **after** the line’s start, within the set margin (200 ms recommended).  
+Less common than the previous case, but handled if needed.  
+Indirectly depends on your lead‑in value in Fase2.
 
-Fase5.py:  
-- Ensures that if you initially uploaded an .ass file with subs to adjust, you will get a final .ass file with the original header of the uploaded subs, and every single line will retain its original styles but with adjusted timing.  
+## **Fase5.py**
+- If you uploaded an `.ass` file for adjustment, the final `.ass` will keep the original header and styles for every line, but with updated timing.
 
-Values you can modify: None.
+**Editable values:** None.
 
 
-Fase6.py:  
-- Delete files that are no longer needed after adjusting the sub timing.
-- Move the files you need to the Desktop.
-- You’ll be asked whether you want to merge "On top.ass/.srt," "Comments.ass" and "Signs.ass" into the final file. If you choose not to merge them, the separate files will also be moved to the desktop.
+## **Fase6.py** 
+- Deletes unnecessary files after timing adjustments.  
+- Moves the required files to the Desktop.  
+- Asks whether to merge `On top.ass/.srt`, `Comments.ass`, and `Signs.ass` into the final file.  
+  If you choose not to merge, the separate files will also be moved to the Desktop.
 
-Values you can modify: None.
+**Editable values:** None.
 
