@@ -19,6 +19,8 @@ Fase1.py:
 - Extracts audio from the video .mkv, passes it to demucs which extracts vocals with the CPU (3/5 minutes) or with GPU (30/40 seconds).
 - Now there is no need to use the site anymore, it does everything automatically locally, make sure you have the right cuda version installed for you in the "main" folder to use GPU.
 
+[Demucs](https://github.com/facebookresearch/demucs) — MIT License
+
 Values you can modify: None.
 
 Fase2.py:  
@@ -67,6 +69,8 @@ If audio peaks in "Peak detection margin after initial timestamp (ms)" and "Peak
 
 Fase3.py:  
 - Detects scene changes and saves them in a .srt file, which will then be used by "Fase4.py".  
+
+[PySceneDetect](https://github.com/Breakthrough/PySceneDetect) — BSD 3-Clause License
 
 Values you can modify: None.
 
