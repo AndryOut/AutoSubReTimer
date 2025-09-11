@@ -10,6 +10,10 @@ from concurrent.futures import as_completed
 # Percorso della directory principale del progetto
 project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
+# VERIFICA SE ESISTE LA CARTELLA BATCH
+batch_dir = os.path.join(project_path, "Batch")
+is_batch = os.path.exists(batch_dir) and os.path.isdir(batch_dir)
+
 # Funzione per esportare i risultati in formato SRT con precisione al millisecondo
 def export_srt(scene_list, output_path, fps):
     def frame_to_timecode(frame, fps):
@@ -138,19 +142,7 @@ def process_segment(args):
         print(f"Errore durante l'elaborazione del segmento {start_time}-{end_time}: {str(e)}")
         return []
 
-def main():
-    # MKV
-    mkv_files = [f for f in os.listdir(project_path) if f.endswith('.mkv')]
-    if not mkv_files:
-        raise FileNotFoundError("Nessun file .mkv trovato nella directory.")
-    video_path = os.path.join(project_path, mkv_files[0])
-    print(f"Trovato video: {mkv_files[0]}")
-
-    # Percorso del file SRT dei sottotitoli
-    srt_path = os.path.join(project_path, "whisper_adjusted.srt")
-    if not os.path.exists(srt_path):
-        raise FileNotFoundError("Il file SRT dei sottotitoli non è stato trovato.")
-    
+def process_video_scenes(video_path, srt_path, output_dir, episode_dir=None):
     # Ottiene il frame rate del video
     fps = get_video_framerate(video_path)
     print(f"Rilevato frame rate video: {fps:.3f} fps")
@@ -190,7 +182,7 @@ def main():
     all_scenes.sort(key=lambda x: x[0].get_seconds())
 
     # Esporta i risultati
-    srt_output_path = os.path.join(project_path, "scene_timestamps.srt")
+    srt_output_path = os.path.join(output_dir, "scene_timestamps.srt")
     export_srt(all_scenes, output_path=srt_output_path, fps=fps)
 
     # 2. Applica offset SPECIFICI:
@@ -202,7 +194,7 @@ def main():
         offset = 0.0
 
     # 3. Applica l'offset
-    adjusted_srt_output_path = os.path.join(project_path, "scene_timestamps_adjusted.srt")
+    adjusted_srt_output_path = os.path.join(output_dir, "scene_timestamps_adjusted.srt")
     apply_global_offset_to_srt(srt_output_path, adjusted_srt_output_path, offset)
 
     # Stampa risultati
@@ -212,6 +204,41 @@ def main():
     print(f"File SRT con offset globale applicato creato con successo: scene_timestamps_adjusted.srt")
     print(f"Offset applicato: {offset:.3f} secondi")
     print(f"Segmenti analizzati: {segments}")
+
+def main():
+    if is_batch:
+        print("Trovata cartella Batch, elaborazione in batch...")
+        # Trova tutte le cartelle numerate in Batch
+        episode_dirs = sorted([d for d in os.listdir(batch_dir) if os.path.isdir(os.path.join(batch_dir, d)) and d.isdigit()])
+        
+        for episode_dir in episode_dirs:
+            episode_path = os.path.join(batch_dir, episode_dir)
+            mkv_files = [f for f in os.listdir(episode_path) if f.endswith('.mkv')]
+            
+            if not mkv_files:
+                print(f"Nessun MKV trovato in {episode_dir}, skipping...")
+                continue
+                
+            video_path = os.path.join(episode_path, mkv_files[0])
+            srt_path = os.path.join(episode_path, f"whisper{episode_dir}_adjusted.srt")
+            
+            print(f"\nElaborazione {episode_dir}: {mkv_files[0]}")
+            process_video_scenes(video_path, srt_path, episode_path, episode_dir)
+            
+    else:
+        # COMPORTAMENTO PER SINGOLO FILE
+        mkv_files = [f for f in os.listdir(project_path) if f.endswith('.mkv')]
+        if not mkv_files:
+            raise FileNotFoundError("Nessun file .mkv trovato nella directory.")
+        video_path = os.path.join(project_path, mkv_files[0])
+        print(f"Trovato video: {mkv_files[0]}")
+
+        # Percorso del file SRT dei sottotitoli
+        srt_path = os.path.join(project_path, "whisper_adjusted.srt")
+        if not os.path.exists(srt_path):
+            raise FileNotFoundError("Il file SRT dei sottotitoli non è stato trovato.")
+        
+        process_video_scenes(video_path, srt_path, project_path)
 
 if __name__ == '__main__':
     main()

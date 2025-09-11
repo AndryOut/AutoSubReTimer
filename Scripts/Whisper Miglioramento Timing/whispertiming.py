@@ -6,12 +6,9 @@ import os
 # Percorso della directory principale
 project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-# File di input
-audio_file = os.path.join(project_dir, "vocali.wav")
-srt_file = os.path.join(project_dir, "whisper.srt")
-
-# File di output
-output_file = os.path.join(project_dir, 'whisper_adjusted.srt')
+# VERIFICA SE ESISTE LA CARTELLA BATCH
+batch_dir = os.path.join(project_dir, "Batch")
+is_batch = os.path.exists(batch_dir) and os.path.isdir(batch_dir)
 
 # Funzione per convertire i millisecondi in SubRipTime
 def milliseconds_to_subrip_time(milliseconds):
@@ -129,40 +126,65 @@ def adjust_segments_for_overlap(segments, max_lead_out=0, lead_in=0, max_lead_in
     adjusted_segments.append(segments[-1])
     return adjusted_segments
 
-# Verifica se i file di input esistono
-if not os.path.exists(audio_file):
-    print(f"Errore: il file audio {audio_file} non esiste.")
-    exit(1)
+def process_srt_adjustment(audio_file, srt_file, output_file):
+    if not os.path.exists(audio_file):
+        print(f"Errore: il file audio {audio_file} non esiste.")
+        return False
 
-if not os.path.exists(srt_file):
-    print(f"Errore: il file SRT {srt_file} non esiste.")
-    exit(1)
+    if not os.path.exists(srt_file):
+        print(f"Errore: il file SRT {srt_file} non esiste.")
+        return False
 
-# Carica il file SRT originale
-subs = pysrt.open(srt_file, encoding='utf-8')
+    subs = pysrt.open(srt_file, encoding='utf-8')
 
-# Funzione cercare i picchi precedenti e aggiungere lead-in partendo dal picco trovato
-subs = add_lead_in_to_peak_or_previous(subs, audio_file)
+    # Funzione cercare i picchi precedenti e aggiungere lead-in partendo dal picco trovato
+    subs = add_lead_in_to_peak_or_previous(subs, audio_file)
 
-# Toglie e aggiunge lead-in partendo dal picco più vicino
-subs = adjust_to_speech_peaks(subs, audio_file) 
-subs = add_lead_in(subs, lead_in=170)        
+    # Toglie e aggiunge lead-in partendo dal picco più vicino
+    subs = adjust_to_speech_peaks(subs, audio_file) 
+    subs = add_lead_in(subs, lead_in=170)        
 
-# Aggiunge il lead-out partendo dal picco successivo
-subs = add_lead_out_to_peak_or_next(subs, audio_file)
+    # Aggiunge il lead-out partendo dal picco successivo
+    subs = add_lead_out_to_peak_or_next(subs, audio_file)
 
-# Ottiene i segmenti originali
-final_segments = [(sub.start.ordinal, sub.end.ordinal) for sub in subs]
+    # Ottiene i segmenti originali
+    final_segments = [(sub.start.ordinal, sub.end.ordinal) for sub in subs]
 
-# Regola i segmenti per evitare sovrapposizioni
-adjusted_segments = adjust_segments_for_overlap(final_segments)
+    # Regola i segmenti per evitare sovrapposizioni
+    adjusted_segments = adjust_segments_for_overlap(final_segments)
 
-# Applica i segmenti regolati ai sottotitoli
-for sub, (start, end) in zip(subs, adjusted_segments):
-    sub.start = milliseconds_to_subrip_time(start)
-    sub.end = milliseconds_to_subrip_time(end)
+    # Applica i segmenti regolati ai sottotitoli
+    for sub, (start, end) in zip(subs, adjusted_segments):
+        sub.start = milliseconds_to_subrip_time(start)
+        sub.end = milliseconds_to_subrip_time(end)
 
-# Salva l'SRT finale
-subs.save(output_file, encoding='utf-8')
+    # Salva l'SRT finale
+    subs.save(output_file, encoding='utf-8')
 
-print(f"File SRT salvato come {output_file}")
+    print(f"File SRT salvato come {output_file}")
+    return True
+
+if is_batch:
+    print("Trovata cartella Batch, elaborazione in batch...")
+    # Trova tutte le cartelle numerate in Batch
+    episode_dirs = sorted([d for d in os.listdir(batch_dir) if os.path.isdir(os.path.join(batch_dir, d)) and d.isdigit()])
+    
+    for episode_dir in episode_dirs:
+        episode_path = os.path.join(batch_dir, episode_dir)
+        
+        audio_file = os.path.join(episode_path, "vocali.wav")
+        srt_file = os.path.join(episode_path, f"whisper{episode_dir}.srt")
+        output_file = os.path.join(episode_path, f'whisper{episode_dir}_adjusted.srt')
+        
+        print(f"\nElaborazione {episode_dir}:")
+        process_srt_adjustment(audio_file, srt_file, output_file)
+        
+else:
+    # COMPORTAMENTO PER SINGOLO FILE
+    # File di input
+    audio_file = os.path.join(project_dir, "vocali.wav")
+    srt_file = os.path.join(project_dir, "whisper.srt")
+    output_file = os.path.join(project_dir, 'whisper_adjusted.srt')
+    
+    print("Elaborazione singola:")
+    process_srt_adjustment(audio_file, srt_file, output_file)

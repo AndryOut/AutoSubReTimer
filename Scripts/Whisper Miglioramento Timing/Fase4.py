@@ -7,6 +7,10 @@ import os
 # Percorso della directory principale del progetto
 project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
+# VERIFICA SE ESISTE LA CARTELLA BATCH
+batch_dir = os.path.join(project_path, "Batch")
+is_batch = os.path.exists(batch_dir) and os.path.isdir(batch_dir)
+
 # Funzione per convertire i millisecondi in SubRip Time
 def milliseconds_to_subrip_time(milliseconds):
     hours = int(milliseconds // 3600000)
@@ -113,7 +117,7 @@ def add_lead_in_based_on_conditions(subs, scene_subs):
 
         # Verifica che le condizioni siano soddisfatte
         if is_above_scene_change and min_duration <= sub_duration <= max_duration:
-            # Verifica che il time stamps iniziale non sia su un cambio scena
+            # Verifica quei time stamps iniziale non sia su un cambio scena
             is_start_on_scene = any(
                 scene.start.ordinal == sub_start for scene in scene_subs
             )
@@ -174,29 +178,55 @@ def adjust_sub_end_based_on_previous_scene_change(original_subs, scene_subs, aud
 
     return original_subs
 
-# Carica i file necessari
-original_subs = pysrt.open(os.path.join(project_path, 'whisper_adjusted.srt'), encoding='utf-8')
-scene_subs = pysrt.open(os.path.join(project_path, 'scene_timestamps_adjusted.srt'), encoding='utf-8')
-audio_peaks = get_audio_peaks(os.path.join(project_path, 'vocali.wav'))
+def process_final_adjustment(whisper_srt_path, scene_srt_path, vocali_path, output_dir, episode_dir=None):
+    original_subs = pysrt.open(whisper_srt_path, encoding='utf-8')
+    scene_subs = pysrt.open(scene_srt_path, encoding='utf-8')
+    audio_peaks = get_audio_peaks(vocali_path)
 
-# Funzione per aggiungere lead-in ai timestamp iniziali troppo vicini ai picchi audio
-adjusted_subs = add_lead_in_to_peaks(original_subs, audio_peaks)
+    # Funzione per aggiungere lead-in ai timestamp iniziali troppo vicini ai picchi audio
+    adjusted_subs = add_lead_in_to_peaks(original_subs, audio_peaks)
 
-# Funzione per rilevare cambi scena prima del time stamps iniziali della riga
-adjusted_subs = adjust_subs_based_on_scenes(original_subs, scene_subs)
+    # Funzione per rilevare cambi scena prima del time stamps iniziali della riga
+    adjusted_subs = adjust_subs_based_on_scenes(original_subs, scene_subs)
 
-# Funzione per rilevare e sostituire il timestamp iniziale della riga
-adjusted_subs = adjust_sub_start_based_on_scene_change(original_subs, scene_subs)
+    # Funzione per rilevare e sostituire il timestamp iniziale della riga
+    adjusted_subs = adjust_sub_start_based_on_scene_change(original_subs, scene_subs)
 
-# Funzione per sostituire il timestamp finale della riga con il timestamp iniziale del cambio scena successivo
-adjusted_subs = adjust_sub_end_based_on_next_scene_change(original_subs, scene_subs)
+    # Funzione per sostituire il timestamp finale della riga con il timestamp iniziale del cambio scena successivo
+    adjusted_subs = adjust_sub_end_based_on_next_scene_change(original_subs, scene_subs)
 
-# Funzione per sostituire il timestamp finale della riga con il timestamp finale del cambio scena precedente
-adjusted_subs = adjust_sub_end_based_on_previous_scene_change(adjusted_subs, scene_subs, audio_peaks)
+    # Funzione per sostituire il timestamp finale della riga con il timestamp finale del cambio scena precedente
+    adjusted_subs = adjust_sub_end_based_on_previous_scene_change(adjusted_subs, scene_subs, audio_peaks)
 
-# Aggiunge lead-in al time stamps iniziale della riga ed è regolata a un cambio scena
-adjusted_subs = add_lead_in_based_on_conditions(adjusted_subs, scene_subs)
+    # Aggiunge lead-in al time stamps iniziale della riga ed è regolata a un cambio scena
+    adjusted_subs = add_lead_in_based_on_conditions(adjusted_subs, scene_subs)
 
-# Salva il nuovo file SRT
-adjusted_subs.save(os.path.join(project_path, 'Final.srt'), encoding='utf-8')
-print("Script completato e sottotitoli aggiornati salvati come 'Final.srt'")
+    # Salva il nuovo file SRT
+    output_path = os.path.join(output_dir, 'Final.srt')
+    adjusted_subs.save(output_path, encoding='utf-8')
+    print(f"Script completato e sottotitoli aggiornati salvati come '{output_path}'")
+
+if is_batch:
+    print("Trovata cartella Batch, elaborazione in batch...")
+    # Trova tutte le cartelle numerate in Batch
+    episode_dirs = sorted([d for d in os.listdir(batch_dir) if os.path.isdir(os.path.join(batch_dir, d)) and d.isdigit()])
+    
+    for episode_dir in episode_dirs:
+        episode_path = os.path.join(batch_dir, episode_dir)
+        
+        whisper_srt_path = os.path.join(episode_path, f"whisper{episode_dir}_adjusted.srt")
+        scene_srt_path = os.path.join(episode_path, "scene_timestamps_adjusted.srt")
+        vocali_path = os.path.join(episode_path, "vocali.wav")
+        
+        print(f"\nElaborazione {episode_dir}:")
+        process_final_adjustment(whisper_srt_path, scene_srt_path, vocali_path, episode_path, episode_dir)
+        
+else:
+    # COMPORTAMENTO PER SINGOLO FILE
+    # File di input
+    whisper_srt_path = os.path.join(project_path, 'whisper_adjusted.srt')
+    scene_srt_path = os.path.join(project_path, 'scene_timestamps_adjusted.srt')
+    vocali_path = os.path.join(project_path, 'vocali.wav')
+    
+    print("Elaborazione singola:")
+    process_final_adjustment(whisper_srt_path, scene_srt_path, vocali_path, project_path)
