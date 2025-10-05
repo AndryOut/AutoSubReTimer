@@ -1,7 +1,5 @@
 @echo off
 setlocal enabledelayedexpansion
-chcp 65001
-set PYTHONIOENCODING=utf-8
 
 cd /d "%~dp0"
 
