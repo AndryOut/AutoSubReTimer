@@ -161,4 +161,4 @@ for sub, (start, end) in zip(subs, adjusted_segments):
 output_file = os.path.join(project_path, "adjusted_Sub.srt")
 subs.save(output_file, encoding='utf-8')
 
-print(f"File SRT salvato come {output_file}")
+print(f"SRT file saved as {output_file}")

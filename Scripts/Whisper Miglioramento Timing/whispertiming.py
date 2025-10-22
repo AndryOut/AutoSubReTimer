@@ -128,11 +128,11 @@ def adjust_segments_for_overlap(segments, max_lead_out=0, lead_in=0, max_lead_in
 
 def process_srt_adjustment(audio_file, srt_file, output_file):
     if not os.path.exists(audio_file):
-        print(f"Errore: il file audio {audio_file} non esiste.")
+        print(f"Error: The audio file {audio_file} does not exist.")
         return False
 
     if not os.path.exists(srt_file):
-        print(f"Errore: il file SRT {srt_file} non esiste.")
+        print(f"Error: The SRT file {srt_file} does not exist.")
         return False
 
     subs = pysrt.open(srt_file, encoding='utf-8')
@@ -161,11 +161,11 @@ def process_srt_adjustment(audio_file, srt_file, output_file):
     # Salva l'SRT finale
     subs.save(output_file, encoding='utf-8')
 
-    print(f"File SRT salvato come {output_file}")
+    print(f"SRT file saved as {output_file}")
     return True
 
 if is_batch:
-    print("Trovata cartella Batch, elaborazione in batch...")
+    print("Batch folder found, batch processing...")
     # Trova tutte le cartelle numerate in Batch
     episode_dirs = sorted([d for d in os.listdir(batch_dir) if os.path.isdir(os.path.join(batch_dir, d)) and d.isdigit()])
     
@@ -176,7 +176,7 @@ if is_batch:
         srt_file = os.path.join(episode_path, f"whisper{episode_dir}.srt")
         output_file = os.path.join(episode_path, f'whisper{episode_dir}_adjusted.srt')
         
-        print(f"\nElaborazione {episode_dir}:")
+        print(f"\nProcessing {episode_dir}:")
         process_srt_adjustment(audio_file, srt_file, output_file)
         
 else:
@@ -186,5 +186,5 @@ else:
     srt_file = os.path.join(project_dir, "whisper.srt")
     output_file = os.path.join(project_dir, 'whisper_adjusted.srt')
     
-    print("Elaborazione singola:")
+    print("Single processing:")
     process_srt_adjustment(audio_file, srt_file, output_file)

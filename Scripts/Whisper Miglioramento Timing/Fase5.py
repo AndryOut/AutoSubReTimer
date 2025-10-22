@@ -44,7 +44,7 @@ def cleanup_files(files, target_dir):
 
 def main():
     if is_batch:
-        print("Trovata cartella Batch, pulizia in batch...")
+        print("Batch folder found, batch cleanup...")
         
         # Pulisce i file in ogni cartella
         episode_dirs = sorted([d for d in os.listdir(batch_dir) if os.path.isdir(os.path.join(batch_dir, d)) and d.isdigit()])
@@ -80,16 +80,16 @@ def main():
             move_to_desktop(files_to_move, episode_path, episode_path)
             existing_to_clean = find_existing_files(cleanup_list, episode_path)
             cleanup_files(existing_to_clean, episode_path)
-            print(f"Pulizia cartella {episode_dir}: tenuti {len(files_to_move)} file, eliminati {len(existing_to_clean)} file")
+            print(f"Cleaning up folder {episode_dir}: kept {len(files_to_move)} files, deleted {len(existing_to_clean)} files")
         
         try:
             batch_on_desktop = os.path.join(desktop_dir, "Batch")
             if os.path.exists(batch_on_desktop):
                 shutil.rmtree(batch_on_desktop)
             shutil.move(batch_dir, desktop_dir)
-            print(f"Cartella Batch spostata su Desktop: {batch_on_desktop}")
+            print(f"Batch folder moved to Desktop: {batch_on_desktop}")
         except Exception as e:
-            print(f"Errore durante lo spostamento della cartella Batch: {e}")
+            print(f"Error moving Batch folder: {e}")
         
         existing_to_clean = find_existing_files(TARGET_FILES['cleanup'], project_dir)
         cleanup_files(existing_to_clean, project_dir)

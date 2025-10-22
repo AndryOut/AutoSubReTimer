@@ -30,32 +30,32 @@ def get_audio_channels(file_path, ffmpeg_path):
             if channels_str.isdigit():
                 return int(channels_str)
             else:
-                print(f"Output ffprobe non valido: {channels_str}")
+                print(f"Invalid ffprobe output: {channels_str}")
         else:
             print(f"FFprobe error: {result.stderr.decode()}")
             
     except Exception as e:
-        print(f"Errore ffprobe: {e}")
+        print(f"Error ffprobe: {e}")
     
     return None
 
 def process_video(input_path, output_dir, ffmpeg_path, project_path):
     # Verifica che il file esista
     if not os.path.isfile(input_path):
-        print(f"Errore: Il file '{input_path}' non esiste.")
+        print(f"Error: The file '{input_path}' does not exist.")
         return False
 
     # Verifica i canali audio
     channels = get_audio_channels(input_path, ffmpeg_path)
 
     if channels is None:
-        print("Errore: Impossibile determinare i canali audio. Utilizzo diretto del file.")
+        print("Error: Unable to determine audio channels. Use file directly.")
         input_for_demucs = input_path
     elif channels == 2:
-        print("Audio già a 2 canali stereo. Utilizzo diretto del file.")
+        print("Audio already in 2-channel stereo. Using the file directly.")
         input_for_demucs = input_path
     else:  
-        print(f"Audio a {channels} canali. Conversione in stereo 2 canali...")
+        print(f"Audio at {channels} channels. Converting to 2-channel stereo...")
         temp_wav = os.path.join(output_dir, "temp_demucs.wav")
 
         ffmpeg_convert_cmd = [
@@ -106,7 +106,7 @@ def process_video(input_path, output_dir, ffmpeg_path, project_path):
         return True
 
     except subprocess.CalledProcessError as e:
-        print(f"Errore durante l'esecuzione di Demucs: {e}")
+        print(f"Error running Demucs: {e}")
         # Pulizia file temporaneo solo se è stato creato
         if input_for_demucs != input_path and os.path.exists(input_for_demucs):
             os.remove(input_for_demucs)
@@ -116,11 +116,11 @@ def process_video(input_path, output_dir, ffmpeg_path, project_path):
 ffmpeg_path = os.path.join(project_path, "ffmpeg", "bin", "ffmpeg.exe")
 
 if not os.path.isfile(ffmpeg_path):
-    print(f"Errore: FFmpeg non trovato nel percorso '{ffmpeg_path}'.")
+    print(f"Error: FFmpeg not found in path '{ffmpeg_path}'.")
     exit()
 
 if is_batch:
-    print("Trovata cartella Batch, elaborazione in batch...")
+    print("Batch folder found, batch processing...")
     # Trova tutte le cartelle numerate in Batch
     episode_dirs = sorted([d for d in os.listdir(batch_dir) if os.path.isdir(os.path.join(batch_dir, d)) and d.isdigit()])
     
@@ -129,26 +129,26 @@ if is_batch:
         mkv_files = [f for f in os.listdir(episode_path) if f.endswith('.mkv')]
         
         if not mkv_files:
-            print(f"Nessun MKV trovato in {episode_dir}, skipping...")
+            print(f"No MKV found in {episode_dir}, skipping...")
             continue
             
         input_file = mkv_files[0]
         input_path = os.path.join(episode_path, input_file)
         output_dir = episode_path  
         
-        print(f"\nElaborazione {episode_dir}: {input_file}")
+        print(f"\nProcessing {episode_dir}: {input_file}")
         process_video(input_path, output_dir, ffmpeg_path, project_path)
         
 else:
     # COMPORTAMENTO PER SINGOLO FILE
     mkv_files = [f for f in os.listdir(project_path) if f.endswith('.mkv')]
     if not mkv_files:
-        print(f"Errore: Nessun file .mkv trovato nella directory '{project_path}'.")
+        print(f"Error: No .mkv file found in directory '{project_path}'.")
         exit()
     
     input_file = mkv_files[0]
     input_path = os.path.join(project_path, input_file)
     output_dir = project_path  
     
-    print(f"Elaborazione singola: {input_file}")
+    print(f"Single processing: {input_file}")
     process_video(input_path, output_dir, ffmpeg_path, project_path)

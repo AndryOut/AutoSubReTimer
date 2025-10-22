@@ -135,7 +135,7 @@ def process_segment(args):
         
         return segment_scenes
     except Exception as e:
-        print(f"Errore durante l'elaborazione del segmento {start_time}-{end_time}: {str(e)}")
+        print(f"Error processing segment {start_time}-{end_time}: {str(e)}")
         return []
 
 def main():
@@ -144,7 +144,7 @@ def main():
     if not mkv_files:
         raise FileNotFoundError("Nessun file .mkv trovato nella directory.")
     video_path = os.path.join(project_path, mkv_files[0])
-    print(f"Trovato video: {mkv_files[0]}")
+    print(f"Found video: {mkv_files[0]}")
 
     # Percorso del file SRT dei sottotitoli
     srt_path = os.path.join(project_path, "adjusted_Sub.srt")
@@ -153,7 +153,7 @@ def main():
     
     # Ottiene il frame rate del video
     fps = get_video_framerate(video_path)
-    print(f"Rilevato frame rate video: {fps:.3f} fps")
+    print(f"Video framerate detected: {fps:.3f} fps")
    
     # Ottiene i segmenti del video da analizzare
     segments = get_segments_to_analyze(srt_path, min_gap=5.0, margin=1.0)
@@ -165,7 +165,7 @@ def main():
     process_args = [(segment, video_path, adaptive_threshold) for segment in segments]
 
     # Rilevamento parallelo delle scene
-    print("Analisi parallela delle scene in corso...")
+    print("Parallel scene analysis in progress...")
     total_segments = len(segments)
     num_threads = min(cpu_count(), len(segments)) if segments else 1  
     
@@ -174,13 +174,13 @@ def main():
         
         for i, _ in enumerate(as_completed(futures), 1):
             progress = int((i / total_segments) * 50)
-            print("\rAnalisi scene: [{}{}] {:>3}%".format(
+            print("\rScene analysis: [{}{}] {:>3}%".format(
                 '=' * progress,
                 ' ' * (50 - progress),
                 int((i / total_segments) * 100)), 
                 end='', flush=True)
     
-    print("\nAnalisi completata!")
+    print("\nAnalysis completed!")
     results = [future.result() for future in futures] 
 
     # Unisce i risultati
@@ -206,12 +206,12 @@ def main():
     apply_global_offset_to_srt(srt_output_path, adjusted_srt_output_path, offset)
 
     # Stampa risultati
-    print(f"Scene rilevate: {len(all_scenes)}")
+    print(f"Scenes detected: {len(all_scenes)}")
     for i, scene in enumerate(all_scenes):
-        print(f"Scena {i+1}: Inizio: {scene[0].get_timecode()}, Fine: {scene[1].get_timecode()}")
-    print(f"File SRT con offset globale applicato creato con successo: scene_timestamps_adjusted.srt")
-    print(f"Offset applicato: {offset:.3f} secondi")
-    print(f"Segmenti analizzati: {segments}")
+        print(f"Scene {i+1}: Start: {scene[0].get_timecode()}, End: {scene[1].get_timecode()}")
+    print(f"SRT file with global offset applied successfully created: scene_timestamps_adjusted.srt")
+    print(f"Offset applied: {offset:.3f} seconds")
+    print(f"Segments analyzed: {segments}")
 
 if __name__ == '__main__':
     main()

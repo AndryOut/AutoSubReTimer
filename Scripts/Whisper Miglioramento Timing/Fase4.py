@@ -204,10 +204,10 @@ def process_final_adjustment(whisper_srt_path, scene_srt_path, vocali_path, outp
     # Salva il nuovo file SRT
     output_path = os.path.join(output_dir, 'Final.srt')
     adjusted_subs.save(output_path, encoding='utf-8')
-    print(f"Script completato e sottotitoli aggiornati salvati come '{output_path}'")
+    print(f"Script completed and updated subtitles saved as '{output_path}'")
 
 if is_batch:
-    print("Trovata cartella Batch, elaborazione in batch...")
+    print("Batch folder found, batch processing...")
     # Trova tutte le cartelle numerate in Batch
     episode_dirs = sorted([d for d in os.listdir(batch_dir) if os.path.isdir(os.path.join(batch_dir, d)) and d.isdigit()])
     
@@ -218,7 +218,7 @@ if is_batch:
         scene_srt_path = os.path.join(episode_path, "scene_timestamps_adjusted.srt")
         vocali_path = os.path.join(episode_path, "vocali.wav")
         
-        print(f"\nElaborazione {episode_dir}:")
+        print(f"\nProcessing {episode_dir}:")
         process_final_adjustment(whisper_srt_path, scene_srt_path, vocali_path, episode_path, episode_dir)
         
 else:
@@ -228,5 +228,5 @@ else:
     scene_srt_path = os.path.join(project_path, 'scene_timestamps_adjusted.srt')
     vocali_path = os.path.join(project_path, 'vocali.wav')
     
-    print("Elaborazione singola:")
+    print("Single processing:")
     process_final_adjustment(whisper_srt_path, scene_srt_path, vocali_path, project_path)

@@ -216,4 +216,4 @@ adjusted_subs = adjust_sub_end_based_on_previous_scene_change(adjusted_subs, sce
 adjusted_subs = add_lead_in_based_on_conditions(adjusted_subs, scene_subs)
 
 adjusted_subs.save(os.path.join(project_path, 'Final.srt'), encoding='utf-8')
-print("Script completato e sottotitoli aggiornati salvati come 'Final.srt'")
+print("Script completed and updated subtitles saved as 'Final.srt'")

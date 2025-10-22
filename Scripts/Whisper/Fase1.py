@@ -74,13 +74,13 @@ def process_batch(project_root, exe_file, exe_folder, config):
                 try:
                     shutil.move(str(output_file), str(dest_path))
                 except Exception as e:
-                    print(f"Errore spostamento {output_file.name}: {e}")
+                    print(f"Error to move {output_file.name}: {e}")
     
     for aac_file in aac_files:
         try:
             aac_file.unlink()
         except Exception as e:
-            print(f"Errore eliminazione {aac_file.name}: {e}")
+            print(f"Error deleting {aac_file.name}: {e}")
     
     return True
 
@@ -105,7 +105,7 @@ def main():
     
         if batch_dir.exists() and batch_dir.is_dir():
             # Modalità batch
-            print("Trovata cartella Batch, elaborazione in batch...")
+            print("Batch folder found, batch processing...")
             return process_batch(project_root, exe_file, exe_folder, config)
         else:
             # Modalità singolo file

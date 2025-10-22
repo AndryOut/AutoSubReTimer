@@ -9,7 +9,7 @@ project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 # MKV di input
 mkv_files = [f for f in os.listdir(project_path) if f.endswith('.mkv')]
 if not mkv_files:
-    print(f"Errore: Nessun file .mkv trovato nella directory '{project_path}'.")
+    print(f"Error: No .mkv file found in directory '{project_path}'.")
     exit()
 input_file = mkv_files[0]
 
@@ -19,7 +19,7 @@ output_dir = project_path
 
 # Verifica che il file MKV esista
 if not os.path.isfile(input_path):
-    print(f"Errore: Il file '{input_file}' non esiste nella directory '{project_path}'.")
+    print(f"Error: The file '{input_file}' does not exist in the directory '{project_path}'.")
     exit()
 
 # Percorso FFmpeg
@@ -27,7 +27,7 @@ ffmpeg_path = os.path.join(project_path, "ffmpeg", "bin", "ffmpeg.exe")
 
 # Verifica che FFmpeg esista
 if not os.path.isfile(ffmpeg_path):
-    print(f"Errore: FFmpeg non trovato nel percorso '{ffmpeg_path}'.")
+    print(f"Error: FFmpeg not found in path '{ffmpeg_path}'.")
     exit()
 
 def get_audio_channels(file_path, ffmpeg_path):
@@ -50,12 +50,12 @@ def get_audio_channels(file_path, ffmpeg_path):
             if channels_str.isdigit():
                 return int(channels_str)
             else:
-                print(f"Output ffprobe non valido: {channels_str}")
+                print(f"Invalid ffprobe output: {channels_str}")
         else:
             print(f"FFprobe error: {result.stderr.decode()}")
             
     except Exception as e:
-        print(f"Errore ffprobe: {e}")
+        print(f"Error ffprobe: {e}")
     
     return None
 
@@ -63,13 +63,13 @@ def get_audio_channels(file_path, ffmpeg_path):
 channels = get_audio_channels(input_path, ffmpeg_path)
 
 if channels is None:
-    print("Errore: Impossibile determinare i canali audio. Utilizzo diretto del file.")
+    print("Error: Unable to determine audio channels. Use file directly.")
     input_for_demucs = input_path
 elif channels == 2:
-    print("Audio già a 2 canali stereo. Utilizzo diretto del file.")
+    print("Audio already in 2-channel stereo. Using the file directly.")
     input_for_demucs = input_path
 else:  
-    print(f"Audio a {channels} canali. Conversione in stereo 2 canali...")
+    print(f"Audio at {channels} channels. Converting to 2-channel stereo...")
     temp_wav = os.path.join(output_dir, "temp_demucs.wav")
 
     ffmpeg_convert_cmd = [
@@ -117,7 +117,7 @@ try:
         os.remove(input_for_demucs)
 
 except subprocess.CalledProcessError as e:
-    print(f"Errore durante l'esecuzione di Demucs: {e}")
+    print(f"Error running Demucs: {e}")
     # Pulizia file temporaneo solo se è stato creato
     if input_for_demucs != input_path and os.path.exists(input_for_demucs):
         os.remove(input_for_demucs)

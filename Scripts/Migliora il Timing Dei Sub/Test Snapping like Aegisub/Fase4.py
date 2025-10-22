@@ -277,7 +277,7 @@ adjusted_subs = adjust_sub_end_based_on_previous_scene_change(adjusted_subs, sce
 adjusted_subs = add_lead_in_based_on_conditions(adjusted_subs, scene_subs)
 
 adjusted_subs.save(os.path.join(project_path, 'Final.srt'), encoding='utf-8')
-print("Script completato e sottotitoli aggiornati salvati come 'Final.srt'")
+print("Script completed and updated subtitles saved as 'Final.srt'")
 final_path = os.path.join(project_path, 'Final.srt')
 
 # Controlla se esiste Dialoghi.ass prima di applicare lo snapping
@@ -289,10 +289,10 @@ if os.path.exists(dialoghi_ass_path):
             with open(fps_path, "r") as f:
                 fps = float(f.read().strip())
             snap_to_nearest_frame(final_path, fps, max_search_ms=100)
-            print(f"Snapping applicato con FPS: {fps}")
+            print(f"Snapping applied with FPS: {fps}")
         finally:
             os.remove(fps_path)
     else:
-        print("Warning: File fps.txt non trovato, snapping non applicato")
+        print("Warning: File fps.txt not found, snapping not applied")
 else:
-    print("Dialoghi.ass non trovato - snapping non applicato")
+    print("Dialoghi.ass not found - snapping not applied")

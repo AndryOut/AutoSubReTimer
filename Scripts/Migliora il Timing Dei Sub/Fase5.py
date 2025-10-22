@@ -39,7 +39,7 @@ def update_ass_timestamps(ass_file, srt_file, output_file):
 
     # Controllo corrispondenza righe tra .ass e .srt
     if len(dialogue_section) != len(subs):
-        print("Errore: Il numero di righe in 'Dialoghi.ass' non corrisponde a quello in 'Final.srt'.")
+        print("Error: The number of lines in 'Dialoghi.ass' does not match the number in 'Final.srt'.")
         return
 
     # Aggiorna i time stamps nei dialoghi del file .ass
@@ -60,7 +60,7 @@ def update_ass_timestamps(ass_file, srt_file, output_file):
 
     # Scrive il file aggiornato
     write_ass_file(header_section, updated_dialogue, format_line, output_file)
-    print(f"I time stamps sono stati aggiornati e il file è stato salvato in: {output_file}")
+    print(f"The timestamps have been updated and the file has been saved to: {output_file}")
 
 # Funzione principale
 def main():
@@ -71,13 +71,13 @@ def main():
 
     # Controlla se il file Dialoghi.ass esiste
     if not os.path.exists(ass_file):
-        print("Fase5.py saltata")
+        print("Fase5.py skipped")
         return
 
-    print(f"Utilizzando i file dalla directory del progetto: {project_path}")
-    print(f"File ASS: {ass_file}")
-    print(f"File SRT: {srt_file}")
-    print(f"File di output: {output_file}")
+    print(f"Using files from the project directory: {project_path}")
+    print(f"Ass File: {ass_file}")
+    print(f"SRT File: {srt_file}")
+    print(f"Output file: {output_file}")
 
     # Aggiorna i time stamps
     update_ass_timestamps(ass_file, srt_file, output_file)
