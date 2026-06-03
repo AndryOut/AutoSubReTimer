@@ -1,0 +1,4 @@
+It allows you to fix subtitles from NF, old CR subs, or other sources while preserving the original leads. Unlike a full re-time, it applies corrections conservatively, keeping the leads intact while still ensuring the signature smoothness of Auto Sub ReTimer.
+
+For subtitles with short lead-ins, such as NF subs, you can apply a preventive desync like -41ms or -82ms (1 or 2 frames) before running the file through Auto Sub ReTimer CR.
+
