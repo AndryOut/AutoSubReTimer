@@ -1,6 +1,6 @@
 {
     "max_range_next_scene": 300,
     "gap_threshold": 280,
-    "scene_change_before_threshold": 240,
+    "scene_change_before_threshold": 250,
     "scene_change_after_threshold": 200
 }

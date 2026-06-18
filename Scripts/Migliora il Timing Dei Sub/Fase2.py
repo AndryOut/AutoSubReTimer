@@ -1,7 +1,5 @@
 import pysrt
-from pydub import AudioSegment
 import librosa
-import numpy as np
 import os
 import json
 
@@ -14,7 +12,7 @@ CONFIG_PATH = os.path.join(os.path.dirname(__file__), "Config_Fase2.json")
 DEFAULT_CONFIG = {
     "picco_audio_threshold": 500,
     "max_range_picco": 700,
-    "lead_in": 175,
+    "lead_in": 180,
     "lead_out": 420
 }
 
@@ -44,8 +42,7 @@ def milliseconds_to_subrip_time(milliseconds):
     milliseconds = int(milliseconds % 1000)
     return pysrt.SubRipTime(hours=hours, minutes=minutes, seconds=seconds, milliseconds=milliseconds)
 
-def get_audio_segments(audio_file="vocali.wav", silence_threshold=320):
-    y, sr = librosa.load(audio_file, sr=None)
+def get_audio_segments(y, sr):
     intervals = librosa.effects.split(y, top_db=25)
 
     segments = []
@@ -54,8 +51,7 @@ def get_audio_segments(audio_file="vocali.wav", silence_threshold=320):
 
     return segments
 
-def adjust_timestamps_based_on_peaks(subs, audio_file):
-    audio_segments = get_audio_segments(audio_file)
+def adjust_timestamps_based_on_peaks(subs, audio_segments):
     for sub in subs:
         start_ms = sub.start.ordinal
         end_ms = sub.end.ordinal
@@ -148,8 +144,10 @@ srt_file = os.path.join(project_path, "Sub.srt")
 subs = pysrt.open(srt_file, encoding='utf-8')
 original_subs = pysrt.open(srt_file, encoding='utf-8')
 
-subs = adjust_timestamps_based_on_peaks(subs, audio_file)
-audio_segments = get_audio_segments(audio_file)
+y, sr = librosa.load(audio_file, sr=None)
+audio_segments = get_audio_segments(y, sr)
+subs = adjust_timestamps_based_on_peaks(subs, audio_segments)
+
 final_segments = [(sub.start.ordinal, sub.end.ordinal) for sub in subs]
 adjusted_segments = add_lead_in_out(final_segments, original_subs)
 adjusted_segments = adjust_segments_for_overlap(adjusted_segments)

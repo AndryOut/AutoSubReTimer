@@ -1,7 +1,5 @@
 import pysrt
-from pydub import AudioSegment
 import librosa
-import numpy as np
 import os
 import json
 
