@@ -31,7 +31,7 @@ No Python or ffmpeg installation needed. Everything is included.
 
 What exactly do the scripts do?  
 Want to customize the settings to suit your preferences?  
-[Read here](Scripts/Migliora%20il%20Timing%20Dei%20Sub/README.md)
+[Read here](Scripts/Auto%20Sub%20ReTimer/README.md)
 ---
 
 ## How to use

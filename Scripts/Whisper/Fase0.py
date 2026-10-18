@@ -1,9 +1,14 @@
 import os
+import sys
 import subprocess
 import shutil
 
-# Percorso
 project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+if os.path.isdir(os.path.join(project_path, "Batch")):
+    print("Error: a 'Batch' folder from a previous run is in the program folder. "
+          "Finish it with Whisper ReTimer, or move/rename it, then try again.", file=sys.stderr)
+    sys.exit(1)
 
 # MKV
 mkv_files = sorted([f for f in os.listdir(project_path) if f.endswith('.mkv')])

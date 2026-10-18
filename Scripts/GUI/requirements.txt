@@ -1,7 +1,5 @@
 customtkinter
-pydub
 librosa
-numpy
 scenedetect
 opencv-python
 demucs

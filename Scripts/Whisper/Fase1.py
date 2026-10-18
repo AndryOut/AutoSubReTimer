@@ -50,8 +50,7 @@ def process_batch(project_root, exe_file, exe_folder, config):
         bufsize=1,
         universal_newlines=True,
         encoding='utf-8',
-        errors='replace',
-        shell=True
+        errors='replace'
     )
     
     process.communicate()
@@ -66,7 +65,8 @@ def process_batch(project_root, exe_file, exe_folder, config):
         base_name = aac_file.stem  # "whisper1", "whisper2", ecc.
         output_files = list(batch_dir.glob(f"{base_name}.*"))
         
-        dest_dir = batch_dir / str(i)
+        number = base_name[len("whisper"):]
+        dest_dir = batch_dir / (number if number.isdigit() else str(i))
         
         for output_file in output_files:
             if output_file.suffix != ".aac": 
@@ -74,7 +74,7 @@ def process_batch(project_root, exe_file, exe_folder, config):
                 try:
                     shutil.move(str(output_file), str(dest_path))
                 except Exception as e:
-                    print(f"Error to move {output_file.name}: {e}")
+                    print(f"Error moving {output_file.name}: {e}")
     
     for aac_file in aac_files:
         try:
@@ -137,8 +137,7 @@ def main():
             bufsize=1,
             universal_newlines=True,
             encoding='utf-8',
-            errors='replace',
-            shell=True
+            errors='replace'
         )
         
         process.communicate()

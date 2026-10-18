@@ -1,0 +1,10 @@
+{
+    "engine_version": "2026.10.1",
+    "backends": {
+        "cpu": "engine-cpu.txt",
+        "cu126": "engine-cu126.txt",
+        "cu128": "engine-cu128.txt"
+    },
+    "min_driver_cu128": 570,
+    "demucs_model": "htdemucs"
+}
