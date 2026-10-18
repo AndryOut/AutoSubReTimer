@@ -12,37 +12,36 @@ Key features:
 - **Local processing** no internet connection required for timing adjustments after the first run.
 - **Optional GPU acceleration** with NVIDIA CUDA for faster processing.
 
-![1](https://github.com/user-attachments/assets/abe9cbd1-610c-456b-a499-bc4a923d0a54)
+<img width="1272" height="882" alt="GUI" src="https://github.com/user-attachments/assets/1c53dc94-f45b-4635-ba34-39f7c8a7176f" />
+
+## Requirements
+
+- Windows 10 / 11, 64 bit
+- About 3 GB of free disk space (6 GB+ with the NVIDIA GPU engine)
+- Optional: NVIDIA GPU for faster processing
+- Optional: `Faster-Whisper-XXL` folder next to the exe for the Whisper functions
+
+## Installation
+
+1. Extract the rar into any folder (better not inside "Program Files").
+2. Run `AutoSubReTimer.exe`.
+3. If you have an NVIDIA graphics card, on first launch the program asks whether to use it (one-time download, about 3.3 GB). Otherwise everything runs on the CPU.
+
+No Python or ffmpeg installation needed. Everything is included.
 
 What exactly do the scripts do?  
-Do you want to change the values ​​to your preferences?  
+Want to customize the settings to suit your preferences?  
 [Read here](Scripts/Migliora%20il%20Timing%20Dei%20Sub/README.md)
 ---
-## NVIDIA GPU Setup (Optional)
 
-If you have an NVIDIA GPU and plan to use it:
+## How to use
 
-- Open `Auto Sub ReTimer GUI.bat` with Notepad (right‑click > Edit).
-- Locate the part of the file where it says `cu118`.
-- Change `cu118` to match the CUDA version supported by your GPU.
+- Run `AutoSubReTimer.exe`.
 
-![2](https://github.com/user-attachments/assets/5140eb44-28cf-4d8a-8894-e9cad96fc4a7)
+- Select AS or CR, press Start, select first your video and then the subtitles.
+- For more information, open Options and enable Instruction panel.
 
-**Tip:** If you're unsure about your CUDA version, open a terminal (cmd) and type nvidia-smi to check it.
-You don’t necessarily have to use a recent CUDA version, you can also use an older one for better compatibility.  
-The important thing is that it is compatible with your NVIDIA card.
 
-- Save and you're done!
----
-## Preparing Your Files
-
-- Put your video `.mkv` inside the `Auto Sub ReTimer` folder.
-
-**Example:**
-
-![3](https://github.com/user-attachments/assets/b76a80e6-4d72-4d4f-84fb-6fb1c611fbf2)
-
-- Run `Auto Sub ReTimer GUI.bat`.
 ---
 ## Input Alignment Guidelines (Important)
 
@@ -50,7 +49,7 @@ THE LINE OF SPOKEN AUDIO IN THE SUB MUST BE WITHIN THE LINES AND NOT PARTIALLY O
 THERE MUST NOT BE THE START OF SPOKEN AUDIO THAT BEGINS BEFORE THE LINE, FOR EXAMPLE.  
 WHEN UPLOADING YOUR `.ass` OR `.srt`, MAKE SURE TO FOLLOW THE INSTRUCTIONS.  
 EVEN A QUICK SYNC THAT'S THE SAME FOR ALL LINES IS SUFFICIENT.  
-FOR EXAMPLE `-0.050` OR `-0.100`.     
+FOR EXAMPLE `-41 ms` (-1 frame) OR `-82 ms` (-2 frames).     
 
 ---
 ### Does not meet the requirements
@@ -100,7 +99,7 @@ FOR EXAMPLE `-0.050` OR `-0.100`.
 ### Requirements
 
 - Put your video `.mkv` and the folder `Faster-Whisper-XXL` inside the `Auto Sub ReTimer` folder.
-- Run `Auto Sub ReTimer GUI.bat` and select **"Whisper"**.
+- Run `AutoSubReTimer.exe` and select **"Whisper"**.
 
 ### Improving `whisper.srt`
 
