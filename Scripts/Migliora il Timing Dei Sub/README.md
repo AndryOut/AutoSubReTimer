@@ -133,10 +133,9 @@ Indirectly depends on your lead‑in value in Fase2.
 
 
 ## **Fase6.py** 
-- Deletes unnecessary files after timing adjustments.  
-- Moves the required files to the Desktop.  
-- Asks whether to merge `On top.ass/.srt`, `Comments.ass`, and `Signs.ass` into the final file.  
-  If you choose not to merge, the separate files will also be moved to the Desktop.
+- Deletes unnecessary temporary files after processing.  
+- Saves the processed file in the input folder (where you selected the subtitles) or in a custom directory set via the GUI's `Options`.  
+- Prompts you on how to save the final file, simply follow the on-screen instructions.
 
 **Editable values:** None.
 
