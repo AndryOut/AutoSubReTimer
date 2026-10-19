@@ -34,6 +34,7 @@ def process_batch(project_root, exe_file, exe_folder, config):
         "--vad_method", "pyannote_v3",
         "--sentence",
         "--patience", "1.5",
+        "--word_timestamps", "True",
         "--output_dir", str(batch_dir)
     ]
     
@@ -124,6 +125,7 @@ def main():
             "--vad_method", "pyannote_v3",
             "--sentence",
             "--patience", "1.5",
+            "--word_timestamps", "True",
             "--output_dir", str(project_root)
         ]
         

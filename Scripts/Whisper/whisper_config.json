@@ -1,7 +1,7 @@
 {
     "default_values": {
         "language": "ja",
-        "model": "large-v3"
+        "model": "large-v2"
     },
     "options": {
         "languages": [
