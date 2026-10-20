@@ -73,7 +73,7 @@ def main():
 
     # Controlla se il file Dialoghi.ass esiste
     if not os.path.exists(ass_file):
-        print("Fase5.py skipped")
+        print("Phase5.py skipped")
         return
 
     print(f"Using files from project directory: {project_path}")

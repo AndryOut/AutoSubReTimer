@@ -183,7 +183,7 @@ def main():
         pass
 
     if video_path:
-        print(f"Video from Fase0: {os.path.basename(video_path)}")
+        print(f"Video from Phase0: {os.path.basename(video_path)}")
     else:
         mkv_files = [f for f in os.listdir(project_path) if f.endswith('.mkv')]
         if not mkv_files:

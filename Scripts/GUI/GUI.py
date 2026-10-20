@@ -133,12 +133,12 @@ ctk.set_default_color_theme("blue")
 # ------------------------------------------------------------
 # GLOBAL STATE
 # ------------------------------------------------------------
-config_fase2_visible = False
-config_fase4_visible = False
+config_phase2_visible = False
+config_phase4_visible = False
 config_whisper_visible = False
-config_fase3_visible = False
+config_phase3_visible = False
 
-config_fase3 = {}
+config_phase3 = {}
 config_entries = {}
 
 is_running = False
@@ -184,8 +184,8 @@ def set_start_button(state):
 # PHASE MAP
 # ------------------------------------------------------------
 PHASE_MAP = {
-    "Auto Sub ReTimer": ["F0\nSetup", "F1\nDemucs", "F2\nImprove", "F3\nScene", "F4\nRefine", "F5\nASS", "F6\nMerge"],
-    "Auto Sub ReTimer CR": ["F0\nSetup", "F2\nImprove", "F3\nScene", "F4\nRefine", "F5\nASS", "F6\nMerge"],
+    "Auto Sub ReTimer": ["P0\nSetup", "P1\nDemucs", "P2\nImprove", "P3\nScene", "P4\nRefine", "P5\nASS", "P6\nMerge"],
+    "Auto Sub ReTimer CR": ["P0\nSetup", "P2\nImprove", "P3\nScene", "P4\nRefine", "P5\nASS", "P6\nMerge"],
     "Whisper": ["Setup", "Transcription"],
     "Whisper ReTimer": ["Demucs", "Improve", "Scene", "Refine", "Final"]
 }
@@ -197,7 +197,7 @@ PHASE_MAP = {
 root = ctk.CTk()
 root.title("Auto Sub ReTimer")
 root.configure(fg_color=BG_ROOT)
-root.geometry("1020x680")
+root.geometry("1030x690")
 root.minsize(900, 600)
 
 def _center_window_engine(window):
@@ -255,6 +255,57 @@ def _fade_border(frame):
         frame.after(70, _apply)
     except Exception:
         pass
+
+
+# ------------------------------------------------------------
+# TOOLTIP HELPER
+# ------------------------------------------------------------
+class ToolTip:
+    def __init__(self, widget, text_func, is_menu=False):
+        self.widget = widget
+        self.text_func = text_func
+        self.is_menu = is_menu
+        self.tipwindow = None
+        self.widget.bind("<Enter>", self.show_tip, add="+")
+        self.widget.bind("<Leave>", self.hide_tip, add="+")
+        self.widget.bind("<Destroy>", self.hide_tip, add="+")
+
+    def show_tip(self, event=None):
+        if self.tipwindow:
+            return
+        text = self.text_func()
+        if not text:
+            return
+            
+        if self.is_menu:
+            # Se è in un menu, appare a destra della voce
+            x = self.widget.winfo_rootx() + self.widget.winfo_width() + 2
+            y = self.widget.winfo_rooty()
+        else:
+            # Se è nella barra laterale, appare sotto l'icona
+            x = self.widget.winfo_rootx() + 25
+            y = self.widget.winfo_rooty() + self.widget.winfo_height() + 5
+            
+        self.tipwindow = tw = tk.Toplevel(self.widget)
+        tw.wm_overrideredirect(True)
+        tw.wm_geometry(f"+{x}+{y}")
+        tw.attributes("-topmost", True)
+        label = tk.Label(
+            tw, text=text, justify=tk.LEFT,
+            background="#1A1A21", foreground="#EBEBF2",
+            relief=tk.SOLID, borderwidth=1,
+            font=("Segoe UI", 10), padx=8, pady=4
+        )
+        label.pack(ipadx=1)
+
+    def hide_tip(self, event=None):
+        tw = self.tipwindow
+        self.tipwindow = None
+        if tw:
+            try:
+                tw.destroy()
+            except Exception:
+                pass
 
 
 # ------------------------------------------------------------
@@ -413,30 +464,30 @@ def _config_action_buttons(actions, save_cmd, cancel_cmd):
 # ------------------------------------------------------------
 # CONFIG FUNCTIONS
 # ------------------------------------------------------------
-def mostra_config_fase2():
-    global config_fase2_visible
+def mostra_config_phase2():
+    global config_phase2_visible
 
     if funzione_selezionata != "Auto Sub ReTimer":
         return
 
-    config_fase2_visible = not config_fase2_visible
+    config_phase2_visible = not config_phase2_visible
 
-    if config_fase2_visible:
-        if config_fase4_visible:
-            nascondi_config_fase4()
+    if config_phase2_visible:
+        if config_phase4_visible:
+            nascondi_config_phase4()
         if config_whisper_visible:
             nascondi_config_whisper()
-        if config_fase3_visible:
-            nascondi_config_fase3()
+        if config_phase3_visible:
+            nascondi_config_phase3()
 
-        btn_config_fase2.configure(
+        btn_config_phase2.configure(
             fg_color=ACCENT_DIM,
             border_width=1,
             border_color=ACCENT,
             text_color=TEXT_A
         )
 
-        config_path = os.path.join(paths['project_root'], "Scripts", "Auto Sub ReTimer", "Config_Fase2.json")
+        config_path = os.path.join(paths['project_root'], "Scripts", "Auto Sub ReTimer", "Config_Phase2.json")
 
         try:
             with open(config_path, "r", encoding="utf-8") as f:
@@ -449,7 +500,7 @@ def mostra_config_fase2():
                 "lead_out": 395
             }
 
-        frame, body, actions = _config_shell("Fase2 Configuration", nascondi_config_fase2)
+        frame, body, actions = _config_shell("Phase 2 Configuration", nascondi_config_phase2)
 
         fields = [
             ("Peak detection margin after initial timestamp (ms):", "picco_audio_threshold", config["picco_audio_threshold"]),
@@ -461,36 +512,36 @@ def mostra_config_fase2():
         for i, (label, key, value) in enumerate(fields):
             _config_entry_cell(body, i // 2, i % 2, label, key, value)
 
-        _config_action_buttons(actions, salva_config_fase2, nascondi_config_fase2)
-        config_entries["fase2_frame"] = frame
+        _config_action_buttons(actions, salva_config_phase2, nascondi_config_phase2)
+        config_entries["phase2_frame"] = frame
 
     else:
-        nascondi_config_fase2()
+        nascondi_config_phase2()
 
 
-def nascondi_config_fase2():
-    global config_fase2_visible
+def nascondi_config_phase2():
+    global config_phase2_visible
 
-    btn_config_fase2.configure(
+    btn_config_phase2.configure(
         fg_color=BG_PANEL,
         border_width=1,
         border_color=BORDER,
         text_color=TEXT_2
     )
 
-    if "fase2_frame" in config_entries:
-        config_entries["fase2_frame"].pack_forget()
-        config_entries["fase2_frame"].destroy()
+    if "phase2_frame" in config_entries:
+        config_entries["phase2_frame"].pack_forget()
+        config_entries["phase2_frame"].destroy()
 
-    for key in ["picco_audio_threshold", "max_range_picco", "lead_in", "lead_out", "fase2_frame"]:
+    for key in ["picco_audio_threshold", "max_range_picco", "lead_in", "lead_out", "phase2_frame"]:
         config_entries.pop(key, None)
 
-    config_fase2_visible = False
+    config_phase2_visible = False
 
 
-def salva_config_fase2():
+def salva_config_phase2():
     try:
-        config_path = os.path.join(paths['project_root'], "Scripts", "Auto Sub ReTimer", "Config_Fase2.json")
+        config_path = os.path.join(paths['project_root'], "Scripts", "Auto Sub ReTimer", "Config_Phase2.json")
 
         new_config = {
             "picco_audio_threshold": int(config_entries["picco_audio_threshold"].get()),
@@ -503,7 +554,7 @@ def salva_config_fase2():
             json.dump(new_config, f, indent=4)
 
         messagebox.showinfo("Success", "Configuration saved successfully!")
-        nascondi_config_fase2()
+        nascondi_config_phase2()
 
     except ValueError:
         messagebox.showerror("Error", "Please enter only integer numbers")
@@ -512,30 +563,30 @@ def salva_config_fase2():
         messagebox.showerror("Error", f"Error while saving: {str(e)}")
 
 
-def mostra_config_fase4():
-    global config_fase4_visible
+def mostra_config_phase4():
+    global config_phase4_visible
 
     if funzione_selezionata != "Auto Sub ReTimer":
         return
 
-    config_fase4_visible = not config_fase4_visible
+    config_phase4_visible = not config_phase4_visible
 
-    if config_fase4_visible:
-        if config_fase2_visible:
-            nascondi_config_fase2()
+    if config_phase4_visible:
+        if config_phase2_visible:
+            nascondi_config_phase2()
         if config_whisper_visible:
             nascondi_config_whisper()
-        if config_fase3_visible:
-            nascondi_config_fase3()
+        if config_phase3_visible:
+            nascondi_config_phase3()
 
-        btn_config_fase4.configure(
+        btn_config_phase4.configure(
             fg_color=ACCENT_DIM,
             border_width=1,
             border_color=ACCENT,
             text_color=TEXT_A
         )
 
-        config_path = os.path.join(paths['project_root'], "Scripts", "Auto Sub ReTimer", "Config_Fase4.json")
+        config_path = os.path.join(paths['project_root'], "Scripts", "Auto Sub ReTimer", "Config_Phase4.json")
 
         try:
             with open(config_path, "r", encoding="utf-8") as f:
@@ -548,7 +599,7 @@ def mostra_config_fase4():
                 "scene_change_after_threshold": 200
             }
 
-        frame, body, actions = _config_shell("Fase4 Configuration", nascondi_config_fase4)
+        frame, body, actions = _config_shell("Phase 4 Configuration", nascondi_config_phase4)
 
         fields4 = [
             ("Max range to detect a scene change from the final timestamp (ms):", "max_range_next_scene", config["max_range_next_scene"]),
@@ -560,42 +611,42 @@ def mostra_config_fase4():
         for i, (label, key, value) in enumerate(fields4):
             _config_entry_cell(body, i // 2, i % 2, label, key, value)
 
-        _config_action_buttons(actions, salva_config_fase4, nascondi_config_fase4)
-        config_entries["fase4_frame"] = frame
+        _config_action_buttons(actions, salva_config_phase4, nascondi_config_phase4)
+        config_entries["phase4_frame"] = frame
 
     else:
-        nascondi_config_fase4()
+        nascondi_config_phase4()
 
 
-def nascondi_config_fase4():
-    global config_fase4_visible
+def nascondi_config_phase4():
+    global config_phase4_visible
 
-    btn_config_fase4.configure(
+    btn_config_phase4.configure(
         fg_color=BG_PANEL,
         border_width=1,
         border_color=BORDER,
         text_color=TEXT_2
     )
 
-    if "fase4_frame" in config_entries:
-        config_entries["fase4_frame"].pack_forget()
-        config_entries["fase4_frame"].destroy()
+    if "phase4_frame" in config_entries:
+        config_entries["phase4_frame"].pack_forget()
+        config_entries["phase4_frame"].destroy()
 
     for key in [
         "max_range_next_scene",
         "gap_threshold",
         "scene_change_before_threshold",
         "scene_change_after_threshold",
-        "fase4_frame"
+        "phase4_frame"
     ]:
         config_entries.pop(key, None)
 
-    config_fase4_visible = False
+    config_phase4_visible = False
 
 
-def salva_config_fase4():
+def salva_config_phase4():
     try:
-        config_path = os.path.join(paths['project_root'], "Scripts", "Auto Sub ReTimer", "Config_Fase4.json")
+        config_path = os.path.join(paths['project_root'], "Scripts", "Auto Sub ReTimer", "Config_Phase4.json")
 
         new_config = {
             "max_range_next_scene": int(config_entries["max_range_next_scene"].get()),
@@ -608,7 +659,7 @@ def salva_config_fase4():
             json.dump(new_config, f, indent=4)
 
         messagebox.showinfo("Success", "Configuration saved successfully!")
-        nascondi_config_fase4()
+        nascondi_config_phase4()
 
     except ValueError:
         messagebox.showerror("Error", "Please enter only integer numbers")
@@ -626,12 +677,12 @@ def mostra_config_whisper():
     config_whisper_visible = not config_whisper_visible
 
     if config_whisper_visible:
-        if config_fase2_visible:
-            nascondi_config_fase2()
-        if config_fase4_visible:
-            nascondi_config_fase4()
-        if config_fase3_visible:
-            nascondi_config_fase3()
+        if config_phase2_visible:
+            nascondi_config_phase2()
+        if config_phase4_visible:
+            nascondi_config_phase4()
+        if config_phase3_visible:
+            nascondi_config_phase3()
 
         btn_config_whisper.configure(
             fg_color=ACCENT_DIM,
@@ -726,41 +777,41 @@ def salva_config_whisper():
 
 
 # ------------------------------------------------------------
-# FASE3 CONFIG
+# PHASE3 CONFIG
 # ------------------------------------------------------------
-FASE3_CONFIG_DIRS = {
+PHASE3_CONFIG_DIRS = {
     "Auto Sub ReTimer": "Auto Sub ReTimer",
     "Auto Sub ReTimer CR": "Auto Sub ReTimer CR",
     "Whisper ReTimer": "Whisper ReTimer",
 }
 
-FASE3_DETECTORS = [
+PHASE3_DETECTORS = [
     ("pyscenedetect", "PySceneDetect"),
     ("transnetv2", "TransNetV2"),
 ]
 
 
-def _config_fase3_path():
-    return os.path.join(paths['project_root'], "Scripts", FASE3_CONFIG_DIRS[funzione_selezionata], "Config_Fase3.json")
+def _config_phase3_path():
+    return os.path.join(paths['project_root'], "Scripts", PHASE3_CONFIG_DIRS[funzione_selezionata], "Config_Phase3.json")
 
 
-def mostra_config_fase3():
-    global config_fase3_visible
+def mostra_config_phase3():
+    global config_phase3_visible
 
-    if funzione_selezionata not in FASE3_CONFIG_DIRS:
+    if funzione_selezionata not in PHASE3_CONFIG_DIRS:
         return
 
-    config_fase3_visible = not config_fase3_visible
+    config_phase3_visible = not config_phase3_visible
 
-    if config_fase3_visible:
-        if config_fase2_visible:
-            nascondi_config_fase2()
-        if config_fase4_visible:
-            nascondi_config_fase4()
+    if config_phase3_visible:
+        if config_phase2_visible:
+            nascondi_config_phase2()
+        if config_phase4_visible:
+            nascondi_config_phase4()
         if config_whisper_visible:
             nascondi_config_whisper()
 
-        btn_config_fase3.configure(
+        btn_config_phase3.configure(
             fg_color=ACCENT_DIM,
             border_width=1,
             border_color=ACCENT,
@@ -768,89 +819,89 @@ def mostra_config_fase3():
         )
 
         try:
-            with open(_config_fase3_path(), "r", encoding="utf-8") as f:
+            with open(_config_phase3_path(), "r", encoding="utf-8") as f:
                 current = json.load(f).get("scene_detector", "pyscenedetect")
         except (OSError, ValueError, AttributeError):
             current = "pyscenedetect"
 
-        labels = dict(FASE3_DETECTORS)
+        labels = dict(PHASE3_DETECTORS)
 
-        frame, body, actions = _config_shell("Fase3 Configuration", nascondi_config_fase3)
+        frame, body, actions = _config_shell("Phase 3 Configuration", nascondi_config_phase3)
 
         detector_var = _config_option_cell(
             body, 0, 0,
             "Scene detection model (use TransNetV2 if PyScene fails shot changes):",
-            [label for _, label in FASE3_DETECTORS],
+            [label for _, label in PHASE3_DETECTORS],
             labels.get(current, labels["pyscenedetect"]),
             colspan=2
         )
 
-        _config_action_buttons(actions, salva_config_fase3, nascondi_config_fase3)
+        _config_action_buttons(actions, salva_config_phase3, nascondi_config_phase3)
 
-        config_fase3["frame"] = frame
-        config_fase3["detector"] = detector_var
+        config_phase3["frame"] = frame
+        config_phase3["detector"] = detector_var
 
     else:
-        nascondi_config_fase3()
+        nascondi_config_phase3()
 
 
-def nascondi_config_fase3():
-    global config_fase3_visible
+def nascondi_config_phase3():
+    global config_phase3_visible
 
-    btn_config_fase3.configure(
+    btn_config_phase3.configure(
         fg_color=BG_PANEL,
         border_width=1,
         border_color=BORDER,
         text_color=TEXT_2
     )
 
-    if "frame" in config_fase3:
-        config_fase3["frame"].pack_forget()
-        config_fase3["frame"].destroy()
+    if "frame" in config_phase3:
+        config_phase3["frame"].pack_forget()
+        config_phase3["frame"].destroy()
 
-    config_fase3.clear()
-    config_fase3_visible = False
+    config_phase3.clear()
+    config_phase3_visible = False
 
 
-def salva_config_fase3():
+def salva_config_phase3():
     try:
-        label = config_fase3["detector"].get()
-        detector = next(key for key, text in FASE3_DETECTORS if text == label)
+        label = config_phase3["detector"].get()
+        detector = next(key for key, text in PHASE3_DETECTORS if text == label)
 
-        with open(_config_fase3_path(), "w", encoding="utf-8") as f:
+        with open(_config_phase3_path(), "w", encoding="utf-8") as f:
             json.dump({"scene_detector": detector}, f, indent=4)
 
         messagebox.showinfo("Success", "Configuration saved successfully!")
-        nascondi_config_fase3()
+        nascondi_config_phase3()
 
     except Exception as e:
         messagebox.showerror("Error", f"Error while saving: {str(e)}")
 
 
 def aggiorna_visibilita_pulsanti_config():
-    for btn in (btn_config_fase2, btn_config_fase3, btn_config_fase4, btn_config_whisper):
+    for btn in (btn_config_phase2, btn_config_phase3, btn_config_phase4, btn_config_whisper):
         btn.pack_forget()
 
     if funzione_selezionata == "Auto Sub ReTimer":
-        btn_config_fase2.pack(side="left", padx=5)
-        btn_config_fase3.pack(side="left", padx=5)
-        btn_config_fase4.pack(side="left", padx=5)
+        btn_config_phase2.pack(side="left", padx=5)
+        btn_config_phase3.pack(side="left", padx=5)
+        btn_config_phase4.pack(side="left", padx=5)
 
-        btn_config_fase2.configure(state="normal")
-        btn_config_fase3.configure(state="normal")
-        btn_config_fase4.configure(state="normal")
+        btn_config_phase2.configure(state="normal")
+        btn_config_phase3.configure(state="normal")
+        btn_config_phase4.configure(state="normal")
 
     elif funzione_selezionata == "Whisper":
         btn_config_whisper.pack(side="left", padx=5)
         btn_config_whisper.configure(state="normal")
 
     elif funzione_selezionata in ("Auto Sub ReTimer CR", "Whisper ReTimer"):
-        btn_config_fase3.pack(side="left", padx=5)
-        btn_config_fase3.configure(state="normal")
+        btn_config_phase3.pack(side="left", padx=5)
+        btn_config_phase3.configure(state="normal")
 
-    nascondi_config_fase2()
-    nascondi_config_fase3()
-    nascondi_config_fase4()
+    nascondi_config_phase2()
+    nascondi_config_phase3()
+    nascondi_config_phase4()
     nascondi_config_whisper()
 
 
@@ -866,18 +917,18 @@ def setup_paths():
             'project_root': project_root,
 
             'retimer_scripts': {
-                'fase0': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Fase0.py"),
-                'fase1': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Fase1.py"),
-                'fase2': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Fase2.py"),
-                'fase3': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Fase3.py"),
-                'fase4': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Fase4.py"),
-                'fase5': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Fase5.py"),
-                'fase6': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Fase6.py")
+                'phase0': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Phase0.py"),
+                'phase1': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Phase1.py"),
+                'phase2': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Phase2.py"),
+                'phase3': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Phase3.py"),
+                'phase4': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Phase4.py"),
+                'phase5': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Phase5.py"),
+                'phase6': os.path.join(project_root, "Scripts", "Auto Sub ReTimer", "Phase6.py")
             },
 
             'whisper_scripts': {
-                'fase0': os.path.join(project_root, "Scripts", "Whisper", "Fase0.py"),
-                'fase1': os.path.join(project_root, "Scripts", "Whisper", "Fase1.py"),
+                'phase0': os.path.join(project_root, "Scripts", "Whisper", "Phase0.py"),
+                'phase1': os.path.join(project_root, "Scripts", "Whisper", "Phase1.py"),
                 'venv_python': sys.executable,
                 'exe_folder': os.path.join(project_root, "Faster-Whisper-XXL"),
                 'exe_file': os.path.join(project_root, "Faster-Whisper-XXL", "faster-whisper-xxl.exe"),
@@ -885,11 +936,11 @@ def setup_paths():
             },
 
             'whisper_retimer': {
-                'fase0': os.path.join(project_root, "Scripts", "Whisper ReTimer", "Fase0.py"),
+                'phase0': os.path.join(project_root, "Scripts", "Whisper ReTimer", "Phase0.py"),
                 'whispertiming': os.path.join(project_root, "Scripts", "Whisper ReTimer", "whispertiming.py"),
-                'fase3': os.path.join(project_root, "Scripts", "Whisper ReTimer", "Fase3.py"),
-                'fase4': os.path.join(project_root, "Scripts", "Whisper ReTimer", "Fase4.py"),
-                'fase5': os.path.join(project_root, "Scripts", "Whisper ReTimer", "Fase5.py")
+                'phase3': os.path.join(project_root, "Scripts", "Whisper ReTimer", "Phase3.py"),
+                'phase4': os.path.join(project_root, "Scripts", "Whisper ReTimer", "Phase4.py"),
+                'phase5': os.path.join(project_root, "Scripts", "Whisper ReTimer", "Phase5.py")
             },
 
             'auto_sub_retimer_cr': {
@@ -897,11 +948,11 @@ def setup_paths():
                 'long_leads': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Long leads"),
                 'short_leads': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Short leads"),
                 'scripts': {
-                    'fase0': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Fase0.py"),
-                    'fase2': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Fase2.py"),
-                    'fase3': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Fase3.py"),
-                    'fase5': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Fase5.py"),
-                    'fase6': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Fase6.py")
+                    'phase0': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Phase0.py"),
+                    'phase2': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Phase2.py"),
+                    'phase3': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Phase3.py"),
+                    'phase5': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Phase5.py"),
+                    'phase6': os.path.join(project_root, "Scripts", "Auto Sub ReTimer CR", "Phase6.py")
                 }
             },
 
@@ -937,8 +988,8 @@ def setup_paths():
                 missing_paths.append(f"Whisper ReTimer script not found: {path}")
                 paths['available']['retimer'] = False
 
-        if not os.path.exists(paths['whisper_scripts']['fase0']):
-            missing_paths.append(f"Whisper script not found: {paths['whisper_scripts']['fase0']}")
+        if not os.path.exists(paths['whisper_scripts']['phase0']):
+            missing_paths.append(f"Whisper script not found: {paths['whisper_scripts']['phase0']}")
             paths['available']['whisper'] = False
 
         if not os.path.exists(paths['whisper_scripts']['exe_file']):
@@ -973,13 +1024,13 @@ def setup_paths():
 
         if paths['available']['autosub_cr']:
             for folder in [paths['auto_sub_retimer_cr']['long_leads'], paths['auto_sub_retimer_cr']['short_leads']]:
-                if not os.path.exists(os.path.join(folder, "Fase4.py")):
-                    missing_paths.append(f"Missing Fase4.py in {folder}")
+                if not os.path.exists(os.path.join(folder, "Phase4.py")):
+                    missing_paths.append(f"Missing Phase4.py in {folder}")
                     paths['available']['autosub_cr'] = False
                     break
 
-                if not os.path.exists(os.path.join(folder, "Config_Fase4.json")):
-                    missing_paths.append(f"Missing Config_Fase4.json in {folder}")
+                if not os.path.exists(os.path.join(folder, "Config_Phase4.json")):
+                    missing_paths.append(f"Missing Config_Phase4.json in {folder}")
                     paths['available']['autosub_cr'] = False
                     break
 
@@ -1086,10 +1137,10 @@ def precompile_modules():
         script_files += list(paths['auto_sub_retimer_cr']['scripts'].values())
 
         for folder in [paths['auto_sub_retimer_cr']['long_leads'], paths['auto_sub_retimer_cr']['short_leads']]:
-            script_files.append(os.path.join(folder, "Fase4.py"))
+            script_files.append(os.path.join(folder, "Phase4.py"))
 
-        script_files.append(paths['whisper_scripts']['fase0'])
-        script_files.append(paths['whisper_scripts']['fase1'])
+        script_files.append(paths['whisper_scripts']['phase0'])
+        script_files.append(paths['whisper_scripts']['phase1'])
         script_files.append(paths['timing_swap']['script'])
         script_files.append(paths['tools']['text_correction'])
         script_files.append(paths['tools']['oona_fix'])
@@ -1267,7 +1318,7 @@ class ProgressManager:
             set_status("Status: Inactive", "idle")
         else:
             set_status(
-                f"Status: Fase {self.current_phase} ({int(self.phase_progress)}%)",
+                f"Status: Phase {self.current_phase} ({int(self.phase_progress)}%)",
                 "running"
             )
 
@@ -1282,22 +1333,41 @@ _LOG_CLEAR = object()
 # ------------------------------------------------------------
 # INSTRUCTIONS / MENU STATE
 # ------------------------------------------------------------
-instructions_visible = _load_gui_config().get("instructions_visible", False)
+_cfg = _load_gui_config()
+instructions_visible = _cfg.get("instructions_visible", True)
+if "instructions_visible" not in _cfg:
+    _save_gui_config_key("instructions_visible", True)
 DASH_MAX_WIDTH = 750
 
 
 # ------------------------------------------------------------
 # CUSTOM DROPDOWN
 # ------------------------------------------------------------
+_active_dropdown = None
+
+
 def open_dropdown(anchor_widget, options):
+    global _active_dropdown
+
+    if _active_dropdown is not None:
+        try:
+            if _active_dropdown.winfo_exists():
+                _active_dropdown.destroy()
+        except Exception:
+            pass
+        _active_dropdown = None
+
     dropdown = tk.Toplevel(root)
     dropdown.overrideredirect(True)
     dropdown.configure(bg=BORDER)
-    dropdown.attributes("-topmost", True)
+    dropdown.transient(root)
+
+    _active_dropdown = dropdown
 
     x = anchor_widget.winfo_rootx()
     y = anchor_widget.winfo_rooty() + anchor_widget.winfo_height() + 2
     dropdown.geometry(f"+{x}+{y}")
+    dropdown.lift()
 
     inner = tk.Frame(dropdown, bg=BG_CARD)
     inner.pack(padx=1, pady=1)
@@ -1305,6 +1375,7 @@ def open_dropdown(anchor_widget, options):
     _open_time = time.time()
 
     def close(event=None):
+        global _active_dropdown
         if not dropdown.winfo_exists():
             return
 
@@ -1314,6 +1385,7 @@ def open_dropdown(anchor_widget, options):
             except Exception:
                 pass
 
+        _active_dropdown = None
         dropdown.destroy()
 
     def _on_any_click(event):
@@ -1333,6 +1405,9 @@ def open_dropdown(anchor_widget, options):
 
     root.bind_all("<Button-1>", _on_any_click, add="+")
     root.bind_all("<Escape>", close, add="+")
+    
+    dropdown.focus_force()
+    dropdown.bind("<FocusOut>", close)
 
     def close_now():
         close()
@@ -1368,6 +1443,9 @@ def open_dropdown(anchor_widget, options):
             item.bind("<Enter>", on_enter)
             item.bind("<Leave>", on_leave)
             item.bind("<Button-1>", on_click)
+
+            if "tooltip" in opt:
+                ToolTip(item, lambda t=opt["tooltip"]: t, is_menu=True)
 
         else:
             row = tk.Frame(inner, bg=BG_CARD)
@@ -1425,6 +1503,9 @@ def open_dropdown(anchor_widget, options):
             reset.bind("<Leave>", _hover_off)
             reset.bind("<Button-1>", _click_reset)
 
+            if "tooltip" in opt:
+                ToolTip(main, lambda t=opt["tooltip"]: t, is_menu=True)
+
 
 def _toggle_instructions_view():
     global instructions_visible
@@ -1447,12 +1528,6 @@ def _toggle_instructions_view():
         _layout_body("dashboard")
 
     _save_gui_config_key("instructions_visible", instructions_visible)
-
-
-def _open_file_menu():
-    open_dropdown(btn_menu_file, [
-        {"label": "Exit", "command": lambda: root.destroy()},
-    ])
 
 
 def _toggle_debug_run():
@@ -1505,19 +1580,22 @@ def _open_tools_menu():
     if paths['available']['text_correction']:
         options.append({
             "label": "TextCorrection",
-            "command": lambda: threading.Thread(target=esegui_text_correction, daemon=True).start()
+            "command": lambda: threading.Thread(target=esegui_text_correction, daemon=True).start(),
+            "tooltip": "Conditional \\N removal, fixes headers/styles, \ncasing, and specific ellipses."
         })
 
     if paths['available']['oona_fix']:
         options.append({
             "label": "OoonaFix",
-            "command": lambda: threading.Thread(target=esegui_oona_fix, daemon=True).start()
+            "command": lambda: threading.Thread(target=esegui_oona_fix, daemon=True).start(),
+            "tooltip": "Standardizes styles, removes \\N conditionally, \nhandles italics/ellipses, and separates signs."
         })
 
     if paths['available']['timing_swap']:
         options.append({
             "label": "TimingSwap",
-            "command": lambda: threading.Thread(target=esegui_timing_swap, daemon=True).start()
+            "command": lambda: threading.Thread(target=esegui_timing_swap, daemon=True).start(),
+            "tooltip": "Swaps text into a correctly timed subtitle file."
         })
 
     if not options:
@@ -1665,11 +1743,8 @@ def _menu_button(parent, text, command, width=56):
     )
 
 
-btn_menu_file = _menu_button(menu_strip, "File", _open_file_menu)
-btn_menu_file.pack(side="left", padx=(6, 2))
-
 btn_menu_tools = _menu_button(menu_strip, "Tools", _open_tools_menu)
-btn_menu_tools.pack(side="left", padx=2)
+btn_menu_tools.pack(side="left", padx=(6, 2))
 
 btn_menu_options = _menu_button(menu_strip, "Options", lambda: _open_options_panel(), width=66)
 btn_menu_options.pack(side="left", padx=2)
@@ -1736,6 +1811,7 @@ button_autosub = ctk.CTkButton(
     border_color=BG_PANEL
 )
 button_autosub.pack(pady=5)
+ToolTip(button_autosub, lambda: "Auto Sub ReTimer (Full timing adjustment with vocal separation)")
 
 button_autosub_cr = ctk.CTkButton(
     frame_left,
@@ -1752,6 +1828,7 @@ button_autosub_cr = ctk.CTkButton(
     border_color=BG_PANEL
 )
 button_autosub_cr.pack(pady=5)
+ToolTip(button_autosub_cr, lambda: "Auto Sub ReTimer CR (Conservative mode, preserves original leads)")
 
 button_whisper = ctk.CTkButton(
     frame_left,
@@ -1768,6 +1845,7 @@ button_whisper = ctk.CTkButton(
     border_color=BG_PANEL
 )
 button_whisper.pack(pady=5)
+ToolTip(button_whisper, lambda: "Whisper (Audio transcription tool)" if paths['available']['whisper'] else "Requires Faster-Whisper-XXL folder in the app directory")
 
 button_retimer = ctk.CTkButton(
     frame_left,
@@ -1784,6 +1862,7 @@ button_retimer = ctk.CTkButton(
     border_color=BG_PANEL
 )
 button_retimer.pack(pady=5)
+ToolTip(button_retimer, lambda: "Whisper ReTimer (Refine Whisper subtitles timing)" if paths['available']['retimer'] else "Requires Faster-Whisper-XXL folder in the app directory")
 
 
 # ------------------------------------------------------------
@@ -2121,7 +2200,7 @@ def rebuild_phase_pills(function_name):
 
     phase_names = PHASE_MAP.get(
         function_name,
-        ["F0", "F1", "F2", "F3", "F4", "F5", "F6"]
+        ["P0", "P1", "P2", "P3", "P4", "P5", "P6"]
     )
 
     for name in phase_names:
@@ -2161,14 +2240,14 @@ def _make_config_button(text, command, width=110):
     )
 
 
-btn_config_fase2 = _make_config_button("⚙  Fase2", mostra_config_fase2, 110)
-btn_config_fase3 = _make_config_button("⚙  Fase3", mostra_config_fase3, 110)
-btn_config_fase4 = _make_config_button("⚙  Fase4", mostra_config_fase4, 110)
+btn_config_phase2 = _make_config_button("⚙  Phase 2", mostra_config_phase2, 110)
+btn_config_phase3 = _make_config_button("⚙  Phase 3", mostra_config_phase3, 110)
+btn_config_phase4 = _make_config_button("⚙  Phase 4", mostra_config_phase4, 110)
 btn_config_whisper = _make_config_button("⚙  Whisper", mostra_config_whisper, 120)
 
-btn_config_fase2.configure(state="disabled")
-btn_config_fase3.configure(state="disabled")
-btn_config_fase4.configure(state="disabled")
+btn_config_phase2.configure(state="disabled")
+btn_config_phase3.configure(state="disabled")
+btn_config_phase4.configure(state="disabled")
 btn_config_whisper.configure(state="disabled")
 
 def _on_start_click():
@@ -2178,18 +2257,43 @@ def _on_start_click():
     threading.Thread(target=avvia_processo, daemon=True).start()
 
 
+start_container = ctk.CTkFrame(content_wrap, fg_color="transparent")
+start_container.pack(side="bottom", pady=(0, 14), fill="x", padx=6)
+
 button_avvia = ctk.CTkButton(
-    content_wrap,
+    start_container,
     text="START",
     command=_on_start_click,
-    height=52,
+    height=50,
     font=("Segoe UI", 14, "bold"),
     fg_color=SUCCESS,
     hover_color=SUCCESS_H,
     corner_radius=12,
     text_color="#0B0B12"
 )
-button_avvia.pack(side="bottom", pady=(0, 14), fill="x", padx=6)
+button_avvia.pack(fill="x")
+
+start_hint_label = ctk.CTkLabel(
+    start_container,
+    text="",
+    font=("Segoe UI", 11),
+    text_color=TEXT_2
+)
+start_hint_label.pack(pady=(3, 0))
+
+
+def update_start_hint():
+    if funzione_selezionata == "Whisper":
+        start_hint_label.configure(text="Note: Place your .mkv video file next to the .exe before starting.")
+        start_hint_label.pack(pady=(3, 0))
+    elif funzione_selezionata == "Whisper ReTimer":
+        start_hint_label.configure(text="Note: Requires your video and the 'whisper.srt' generated by Whisper in the main folder.")
+        start_hint_label.pack(pady=(3, 0))
+    elif funzione_selezionata in ("Auto Sub ReTimer", "Auto Sub ReTimer CR"):
+        start_hint_label.configure(text="Note: Click START and a window will pop up to select your files.")
+        start_hint_label.pack(pady=(3, 0))
+    else:
+        start_hint_label.pack_forget()
 
 # Elastic area.
 dynamic_area = ctk.CTkFrame(content_wrap, fg_color="transparent")
@@ -2242,7 +2346,7 @@ log_text.tag_configure("error", foreground=DANGER, font=("Consolas", 11, "bold")
 log_text.tag_configure("accent", foreground=ACCENT_H)
 
 log_text.configure(state="normal")
-log_text.insert("1.0", "Ready to start...\n", "info")
+log_text.insert("1.0", "Ready. Select a mode on the left, then click START.\n", "info")
 log_text.configure(state="disabled")
 
 
@@ -2677,7 +2781,7 @@ def kill_process_tree(pid):
 def run_interactive_phase(phase_num, phase_path, proc_registry=None, cancel_event=None, update_progress=True):
     global start_time
 
-    phase_name = f"Fase {phase_num}"
+    phase_name = f"Phase {phase_num}"
 
     if update_progress:
         progress_manager.update_phase(phase_num)
@@ -2708,7 +2812,7 @@ def run_interactive_phase(phase_num, phase_path, proc_registry=None, cancel_even
 
         stderr_thread = threading.Thread(
             target=_stderr_drain,
-            args=(process.stderr, f"F{phase_num} stderr", stderr_tail),
+            args=(process.stderr, f"P{phase_num} stderr", stderr_tail),
             daemon=True
         )
         stderr_thread.start()
@@ -2785,7 +2889,7 @@ def run_interactive_phase(phase_num, phase_path, proc_registry=None, cancel_even
 
 
 def run_normal_phase(phase_num, phase_path, proc_registry=None, cancel_event=None, update_progress=True):
-    phase_name = f"Fase {phase_num}"
+    phase_name = f"Phase {phase_num}"
 
     if update_progress:
         progress_manager.update_phase(phase_num)
@@ -2831,7 +2935,7 @@ def run_normal_phase(phase_num, phase_path, proc_registry=None, cancel_event=Non
                         progress is None or time.time() - last_debug_progress >= DEBUG_PROGRESS_EVERY):
                     if progress is not None:
                         last_debug_progress = time.time()
-                    debug_write(f"  F{phase_num}| {output}")
+                    debug_write(f"  P{phase_num}| {output}")
 
                 if progress is not None:
                     progress_manager.update_progress(progress)
@@ -2878,8 +2982,8 @@ def esegui_auto_sub_retimer():
     try:
         log_message("Starting Auto Sub ReTimer process\n")
 
-        fase0_path = paths['retimer_scripts']['fase0']
-        fase1_path = paths['retimer_scripts']['fase1']
+        phase0_path = paths['retimer_scripts']['phase0']
+        phase1_path = paths['retimer_scripts']['phase1']
 
         active_procs = {}
         cancel_event = threading.Event()
@@ -2905,12 +3009,12 @@ def esegui_auto_sub_retimer():
                 except Exception:
                     pass
 
-        def _run_fase0():
+        def _run_phase0():
             global start_time
 
             results[0] = run_interactive_phase(
                 0,
-                fase0_path,
+                phase0_path,
                 active_procs,
                 cancel_event,
                 update_progress=False
@@ -2926,10 +3030,10 @@ def esegui_auto_sub_retimer():
                 cancel_event.set()
                 _kill_other_proc(1)
 
-        def _run_fase1():
+        def _run_phase1():
             results[1] = run_normal_phase(
                 1,
-                fase1_path,
+                phase1_path,
                 active_procs,
                 cancel_event,
                 update_progress=False
@@ -2945,8 +3049,8 @@ def esegui_auto_sub_retimer():
                 input_handler.cancel()
                 _kill_other_proc(0)
 
-        t0 = threading.Thread(target=_run_fase0, daemon=True)
-        t1 = threading.Thread(target=_run_fase1, daemon=True)
+        t0 = threading.Thread(target=_run_phase0, daemon=True)
+        t1 = threading.Thread(target=_run_phase1, daemon=True)
 
         t0.start()
         t1.start()
@@ -2964,20 +3068,20 @@ def esegui_auto_sub_retimer():
                 except Exception:
                     pass
 
-            log_message("Fase0/Fase1 failed — aborting.\n")
+            log_message("Phase0/Phase1 failed — aborting.\n")
             return
 
         root_dir = paths['project_root']
 
-        fasi = [
-            (2, paths['retimer_scripts']['fase2'], ["adjusted_Sub.srt"]),
-            (3, paths['retimer_scripts']['fase3'], ["scene_timestamps_adjusted.srt"]),
-            (4, paths['retimer_scripts']['fase4'], ["Final.srt"]),
-            (5, paths['retimer_scripts']['fase5'], []),
-            (6, paths['retimer_scripts']['fase6'], []),
+        phases = [
+            (2, paths['retimer_scripts']['phase2'], ["adjusted_Sub.srt"]),
+            (3, paths['retimer_scripts']['phase3'], ["scene_timestamps_adjusted.srt"]),
+            (4, paths['retimer_scripts']['phase4'], ["Final.srt"]),
+            (5, paths['retimer_scripts']['phase5'], []),
+            (6, paths['retimer_scripts']['phase6'], []),
         ]
 
-        for phase_num, phase_path, expected in fasi:
+        for phase_num, phase_path, expected in phases:
             if phase_num == 5 and os.path.exists(os.path.join(root_dir, "Dialoghi.ass")):
                 expected = ["Final.ass"]
 
@@ -2992,7 +3096,7 @@ def esegui_auto_sub_retimer():
             if not success or missing:
                 detail = f" (missing output: {', '.join(missing)})" if missing else ""
                 log_message(
-                    f"Fase {phase_num} failed{detail} — aborting. "
+                    f"Phase {phase_num} failed{detail} — aborting. "
                     f"Intermediate files were left in the project folder.\n"
                 )
                 return
@@ -3034,16 +3138,16 @@ def esegui_auto_sub_retimer_cr():
             return
 
         if risposta == 1:
-            fase4_folder = paths['auto_sub_retimer_cr']['long_leads']
+            phase4_folder = paths['auto_sub_retimer_cr']['long_leads']
         else:
-            fase4_folder = paths['auto_sub_retimer_cr']['short_leads']
+            phase4_folder = paths['auto_sub_retimer_cr']['short_leads']
 
         progress_manager.phase_weights = {0: 15, 2: 20, 3: 15, 4: 20, 5: 20, 6: 10}
 
         log_message("Starting Auto Sub ReTimer CR process\n")
 
-        fase0_path = paths['auto_sub_retimer_cr']['scripts']['fase0']
-        success = run_interactive_phase(0, fase0_path)
+        phase0_path = paths['auto_sub_retimer_cr']['scripts']['phase0']
+        success = run_interactive_phase(0, phase0_path)
 
         if not success:
             return
@@ -3053,34 +3157,34 @@ def esegui_auto_sub_retimer_cr():
         progress_manager.update_phase(1)
         progress_manager.update_progress(100)
 
-        fase2_path = paths['auto_sub_retimer_cr']['scripts']['fase2']
-        success = run_normal_phase(2, fase2_path)
+        phase2_path = paths['auto_sub_retimer_cr']['scripts']['phase2']
+        success = run_normal_phase(2, phase2_path)
 
         if not success:
             return
 
-        fase3_path = paths['auto_sub_retimer_cr']['scripts']['fase3']
-        success = run_normal_phase(3, fase3_path)
+        phase3_path = paths['auto_sub_retimer_cr']['scripts']['phase3']
+        success = run_normal_phase(3, phase3_path)
 
         if not success:
             return
 
-        fase4_path = os.path.join(fase4_folder, "Fase4.py")
-        success = run_normal_phase(4, fase4_path)
+        phase4_path = os.path.join(phase4_folder, "Phase4.py")
+        success = run_normal_phase(4, phase4_path)
 
         if not success:
             return
 
-        fase5_path = paths['auto_sub_retimer_cr']['scripts']['fase5']
-        success = run_normal_phase(5, fase5_path)
+        phase5_path = paths['auto_sub_retimer_cr']['scripts']['phase5']
+        success = run_normal_phase(5, phase5_path)
 
         if not success:
             return
 
         start_time = None
 
-        fase6_path = paths['auto_sub_retimer_cr']['scripts']['fase6']
-        success = run_interactive_phase(6, fase6_path)
+        phase6_path = paths['auto_sub_retimer_cr']['scripts']['phase6']
+        success = run_interactive_phase(6, phase6_path)
 
         if not success:
             return
@@ -3116,14 +3220,14 @@ def esegui_whisper():
 
     try:
         progress_manager.update_phase(0)
-        log_message("Running Fase0.py...\n")
+        log_message("Running Phase0.py...\n")
 
         _args0, _env0 = _module_launch_args(
             paths['whisper_scripts']['venv_python'],
-            paths['whisper_scripts']['fase0']
+            paths['whisper_scripts']['phase0']
         )
 
-        debug_write(f"=== Whisper Fase0: {_args0} ===")
+        debug_write(f"=== Whisper Phase0: {_args0} ===")
 
         fase0_result = subprocess.run(
             _args0,
@@ -3136,27 +3240,27 @@ def esegui_whisper():
             env=_env0
         )
 
-        debug_write(f"  F0 stdout| {fase0_result.stdout}")
-        debug_write(f"  F0 stderr| {fase0_result.stderr}")
-        debug_write(f"=== Whisper Fase0 exit code {fase0_result.returncode} ===")
+        debug_write(f"  P0 stdout| {fase0_result.stdout}")
+        debug_write(f"  P0 stderr| {fase0_result.stderr}")
+        debug_write(f"=== Whisper Phase0 exit code {fase0_result.returncode} ===")
 
         if fase0_result.returncode != 0:
-            log_message(f"Error in Fase0.py:\n{fase0_result.stderr}\n")
+            log_message(f"Error in Phase0.py:\n{fase0_result.stderr}\n")
             return False
 
-        log_message("Fase0.py completed successfully\n")
+        log_message("Phase0.py completed successfully\n")
 
         progress_manager.update_progress(100)
         progress_manager.update_phase(1)
 
-        log_message("Running Fase1.py...\n")
+        log_message("Running Phase1.py...\n")
 
         _args1, _env1 = _module_launch_args(
             paths['whisper_scripts']['venv_python'],
-            paths['whisper_scripts']['fase1']
+            paths['whisper_scripts']['phase1']
         )
 
-        debug_write(f"=== Whisper Fase1: {_args1} ===")
+        debug_write(f"=== Whisper Phase1: {_args1} ===")
 
         process = subprocess.Popen(
             _args1,
@@ -3184,7 +3288,7 @@ def esegui_whisper():
 
                 log_message(output)
 
-        debug_write(f"=== Whisper Fase1 exit code {process.returncode} ===")
+        debug_write(f"=== Whisper Phase1 exit code {process.returncode} ===")
 
         if process.returncode == 0 or process.returncode == 3221226505:
             log_message("Whisper execution completed successfully\n")
@@ -3192,7 +3296,7 @@ def esegui_whisper():
             completed = True
             return True
         else:
-            log_message(f"Error in Fase1.py (code {process.returncode})\n")
+            log_message(f"Error in Phase1.py (code {process.returncode})\n")
             return False
 
     except Exception as e:
@@ -3261,8 +3365,8 @@ def esegui_whisper_retimer():
             sys.path.insert(0, retimer_dir)
 
         progress_manager.update_phase(0)
-        log_message("Running Fase0.py...\n")
-        esegui_modulo_retimer("Fase0_retimer", "Fase0")
+        log_message("Running Phase0.py...\n")
+        esegui_modulo_retimer("Phase0_retimer", "Phase0")
 
         progress_manager.update_phase(1)
         log_message("Running whispertiming.py...\n")
@@ -3280,16 +3384,16 @@ def esegui_whisper_retimer():
 
         if risposta == 1:
             progress_manager.update_phase(2)
-            log_message("Running Fase3.py...\n")
-            esegui_modulo_retimer("Fase3_retimer", "Fase3")
+            log_message("Running Phase3.py...\n")
+            esegui_modulo_retimer("Phase3_retimer", "Phase3")
 
             progress_manager.update_phase(3)
-            log_message("Running Fase4.py...\n")
-            esegui_modulo_retimer("Fase4_retimer", "Fase4")
+            log_message("Running Phase4.py...\n")
+            esegui_modulo_retimer("Phase4_retimer", "Phase4")
 
             progress_manager.update_phase(4)
-            log_message("Running Fase5.py...\n")
-            esegui_modulo_retimer("Fase5_retimer", "Fase5")
+            log_message("Running Phase5.py...\n")
+            esegui_modulo_retimer("Phase5_retimer", "Phase5")
         else:
             progress_manager.update_phase(2)
             progress_manager.update_progress(100)
@@ -3298,8 +3402,8 @@ def esegui_whisper_retimer():
             progress_manager.update_progress(100)
 
             progress_manager.update_phase(4)
-            log_message("Running Fase5.py...\n")
-            esegui_modulo_retimer("Fase5_retimer", "Fase5")
+            log_message("Running Phase5.py...\n")
+            esegui_modulo_retimer("Phase5_retimer", "Phase5")
 
         log_message("Whisper ReTimer process completed successfully.\n")
         progress_manager.complete_all()
@@ -3632,6 +3736,7 @@ def seleziona_funzione(funzione):
         )
 
     dash_title_label.configure(text=funzione)
+    update_start_hint()
 
     instructions_text.delete("1.0", "end")
 
@@ -3640,19 +3745,21 @@ def seleziona_funzione(funzione):
             instructions_text.insert(
                 "1.0",
                 "Auto Sub ReTimer\n\n"
-                "A tool to fine-tune timing.\n\n"
+                "Designed for subtitles that need a complete dialogue timing overhaul.\n"
+                "Isolates vocals (Demucs) to accurately detect speech start/end.\n"
+                "Removes existing leads and applies fresh ones based on your Phase 2 config.\n"
+                "Snaps subtitle transitions to video scene changes (Phase 3 & 4).\n\n"
                 "REQUIREMENTS\n"
                 "The line of spoken audio in the sub must be within the lines and not partially outside the line (audio spectrum).\n"
                 "There must not be the start of spoken audio that begins before the line, for example.\n"
-                "Even a quick sync that's the same for all lines is sufficient, for example -0.050 or -0.100.\n\n"
-                "1. When prompted, select the .mkv video file and then the subtitles.\n\n"
-                "2. In Fase0, you will be asked to upload the subtitle.\n"
-                "It will automatically separate Signs, Comments and On Top to avoid conflicts with the timing adjustment of dialogues.\n"
-                "If the program can't figure out where certain lines go, you'll be asked to select where to put them.\n"
-                "If the separation does not work as expected, you can always manually separate everything to leave only the dialogues.\n"
+                "Even a quick sync that's the same for all lines is sufficient, for example -0.041ms or -0.82ms (-1 or -2 frames).\n\n"
+                "1. Click START and select your .mkv video, then the subtitles.\n\n"
+                "2. Phase 0: Automatically separates Signs, Comments, and On-Top lines to prevent timing conflicts with dialogues.\n"
+                "If the program is unsure about specific lines, it will ask you to classify them.\n"
+                "If needed, you can also manually separate everything to leave only the dialogue lines.\n"
                 "\n"
-                "3. Fase3 detects scene changes with PySceneDetect or TransNetV2 (Best on GPU): choose it in the Fase3 configuration.\n"
-                "If the video codec is AV1 and PySceneDetect fails in Fase3, use TransNetV2.\n\n"
+                "3. Phase 3 detects scene changes with PySceneDetect or TransNetV2 (Best on GPU): choose it in the Phase 3 configuration.\n"
+                "If the video codec is AV1 and PySceneDetect fails in Phase 3, use TransNetV2.\n\n"
                 "4. Read the instructions on GitHub."
             )
         else:
@@ -3669,10 +3776,11 @@ def seleziona_funzione(funzione):
             instructions_text.insert(
                 "1.0",
                 "Whisper\n\n"
-                "A tool to automatically transcribe audio into subtitles using Faster-Whisper.\n\n"
-                "1. Make sure you have the video .mkv in the Auto Sub ReTimer folder.\n"
-                "\n\n"
+                "Automatically transcribes audio to raw subtitles using Faster-Whisper.\n\n"
+                "1. Place your video (.mkv) in the main Auto Sub ReTimer folder.\n"
                 "2. Select the language and model from the configuration settings.\n"
+                "3. Click START to begin transcription.\n"
+                "3. Note: Use 'Whisper ReTimer' after this to fix the raw timings."
             )
         else:
             instructions_text.insert(
@@ -3689,10 +3797,10 @@ def seleziona_funzione(funzione):
             instructions_text.insert(
                 "1.0",
                 "Whisper ReTimer\n\n"
-                "A tool to refine and fix timing for subtitles generated by Whisper.\n\n"
-                "1. Requires a Whisper-generated subtitle file and the original video.\n\n"
-                "2. Asks if you want the new timing to respect Scene Changes.\n\n"
-                "3. Automatically applies snap-to-scene transitions based on your choice.\n"
+                "Refines the raw timing of subtitles generated by Whisper.\n\n"
+                "1. Requires the original video and the 'whisper.srt' file generated in the WH step.\n"
+                "2. Click START.\n"
+                "3. The tool will ask if you want to snap lines to scene changes.\n"
             )
         else:
             instructions_text.insert(
@@ -3709,11 +3817,14 @@ def seleziona_funzione(funzione):
                 "1.0",
                 "Auto Sub ReTimer CR\n\n"
                 "A more conservative tool compared to Auto Sub ReTimer (AS).\n"
-                "It preserves original lead-ins/outs while improving timing through line-linking and scene-change snapping.\n\n"
-                "1. When prompted, select the .mkv video file and then the subtitles.\n"
-                "\n"
+                "Designed for subtitles that already have solid base timing but suffer from scene-change alignment issues or gaps in standardization (as seen in some subtitles from Crunchyroll, Disney, Amazon, etc.).\n\n"
+                "It preserves original lead-ins/outs while improving timing through line-linking and scene-change snapping.\n"
+                "Tip: If you notice the lead-in is a bit tight on certain episodes, you can apply a -41ms or -82ms (-1 or -2 frames) shift beforehand. This gives the opening speech more breathing room while Auto Sub ReTimer CR keeps all scene snaps aligned.\n\n"
+                "1. Click START and select your video (.mkv) and subtitle.\n"
                 "2. The script will ask if the subtitle leads are natively long or short.\n"
-                "Choose accordingly to use the correct Fase4 configuration automatically.\n\n"
+                "3. Long Leads [Default]: Assumes the source timing already has generous leads. Uses conservative search ranges to minimize misalignments and avoid false snaps.\n"
+                "4. Short Leads: Designed for subtitles with tight/short leads. Uses broader search ranges to snap lines more aggressively and bridges nearby gaps, yielding a smoother overall timing.\n\n"
+                "Choose accordingly to use the correct Phase 4 configuration automatically.\n\n"
                 "If you're not sure what to choose, use Long leads [Default].\n"
             )
         else:

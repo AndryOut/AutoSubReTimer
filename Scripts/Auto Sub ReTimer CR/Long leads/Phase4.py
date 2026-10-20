@@ -2,19 +2,20 @@ import pysrt
 import os
 import json
 
-project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 # =============================================
 # CARICAMENTO PARAMETRI CONFIGURABILI DA JSON
 # =============================================
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "Config_Fase4.json")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.join(current_dir, "Config_Phase4.json")
 
 # Valori di default
 DEFAULT_CONFIG = {
     "max_range_next_scene": 250,
     "gap_threshold": 0,
     "scene_change_before_threshold": 250,
-    "scene_change_after_threshold": 90
+    "scene_change_after_threshold": 110
 }
 
 try:
@@ -53,6 +54,10 @@ def adjust_subs_based_on_scenes(original_subs, scene_subs):
                 break
 
         if scene_start is None:
+            continue
+
+        # Se c'è una scena forward entro 20 ms, lascia fare alla funzione successiva
+        if any(0 < (s.start.ordinal - sub_start) <= 20 for s in scene_subs):
             continue
 
         sub.start = milliseconds_to_subrip_time(scene_start)
@@ -108,7 +113,7 @@ def adjust_sub_end_based_on_previous_scene_change(adjusted_subs, scene_subs):
 adjusted_subs = pysrt.open(os.path.join(project_path, 'adjusted_Sub.srt'), encoding='utf-8')
 scene_subs = pysrt.open(os.path.join(project_path, 'scene_timestamps_adjusted.srt'), encoding='utf-8')
 if len(scene_subs) == 0:
-    print("Warning: no scene changes found (Fase3 error or unsupported codec) - scene snapping skipped")
+    print("Warning: no scene changes found (Phase3 error or unsupported codec) - scene snapping skipped")
 
 adjusted_subs = adjust_subs_based_on_scenes(adjusted_subs, scene_subs)
 adjusted_subs = adjust_sub_start_based_on_scene_change(adjusted_subs, scene_subs)

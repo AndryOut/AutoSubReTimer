@@ -173,7 +173,7 @@ def process_final_adjustment(whisper_srt_path, scene_srt_path, vocali_path, outp
     original_subs = pysrt.open(whisper_srt_path, encoding='utf-8')
     scene_subs = pysrt.open(scene_srt_path, encoding='utf-8')
     if len(scene_subs) == 0:
-        print("Warning: no scene changes found (Fase3 error or unsupported codec) - scene snapping skipped")
+        print("Warning: no scene changes found (Phase3 error or unsupported codec) - scene snapping skipped")
     audio_peaks = get_audio_peaks(vocali_path)
 
     # Funzione per aggiungere lead-in ai timestamp iniziali troppo vicini ai picchi audio

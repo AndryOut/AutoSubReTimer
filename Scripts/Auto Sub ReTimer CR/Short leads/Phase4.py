@@ -8,13 +8,13 @@ project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 # CARICAMENTO PARAMETRI CONFIGURABILI DA JSON
 # =============================================
 current_dir = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(current_dir, "Config_Fase4.json")
+CONFIG_PATH = os.path.join(current_dir, "Config_Phase4.json")
 
 # Valori di default
 DEFAULT_CONFIG = {
-    "max_range_next_scene": 250,
+    "max_range_next_scene": 300,
     "gap_threshold": 0,
-    "scene_change_before_threshold": 250,
+    "scene_change_before_threshold": 300,
     "scene_change_after_threshold": 110
 }
 
@@ -107,18 +107,43 @@ def adjust_sub_end_based_on_previous_scene_change(adjusted_subs, scene_subs):
 
     return adjusted_subs
 
+def gap_threshold(subs, scene_subs):
+    max_gap_hardcoded = 300
+    
+    for idx in range(len(subs) - 1):
+        current_sub = subs[idx]
+        next_sub = subs[idx + 1]
+        
+        current_end = current_sub.end.ordinal
+        next_start = next_sub.start.ordinal
+        gap = next_start - current_end
+        
+        if 0 < gap <= max_gap_hardcoded:
+            scene_in_middle = False
+            for scene in scene_subs:
+                scene_start = scene.start.ordinal
+                if current_end <= scene_start < next_start:
+                    scene_in_middle = True
+                    break
+            
+            if not scene_in_middle:
+                current_sub.end = milliseconds_to_subrip_time(next_start)
+                
+    return subs
+
 # =============================================
 # ESECUZIONE PRINCIPALE 
 # =============================================
 adjusted_subs = pysrt.open(os.path.join(project_path, 'adjusted_Sub.srt'), encoding='utf-8')
 scene_subs = pysrt.open(os.path.join(project_path, 'scene_timestamps_adjusted.srt'), encoding='utf-8')
 if len(scene_subs) == 0:
-    print("Warning: no scene changes found (Fase3 error or unsupported codec) - scene snapping skipped")
+    print("Warning: no scene changes found (Phase3 error or unsupported codec) - scene snapping skipped")
 
 adjusted_subs = adjust_subs_based_on_scenes(adjusted_subs, scene_subs)
 adjusted_subs = adjust_sub_start_based_on_scene_change(adjusted_subs, scene_subs)
 adjusted_subs = adjust_sub_end_based_on_next_scene_change(adjusted_subs, scene_subs)
 adjusted_subs = adjust_sub_end_based_on_previous_scene_change(adjusted_subs, scene_subs)
+adjusted_subs = gap_threshold(adjusted_subs, scene_subs)
 
 adjusted_subs.save(os.path.join(project_path, 'Final.srt'), encoding='utf-8')
 print("Script completed and updated subtitles saved as 'Final.srt'")

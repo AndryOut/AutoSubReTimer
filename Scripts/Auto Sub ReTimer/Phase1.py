@@ -9,7 +9,7 @@ project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 handshake_path = os.path.join(project_path, ".asr_pipeline_paths.json")
 
 # Attende l'handshake di Fase0 (scritto subito dopo la scelta del video).
-print("Waiting for video selection from Fase0...")
+print("Waiting for video selection from Phase0...")
 video_from_handshake = None
 while True:
     if os.path.exists(handshake_path):
@@ -26,7 +26,7 @@ while True:
 if video_from_handshake and os.path.isfile(video_from_handshake):
     input_path = video_from_handshake
     input_file = os.path.basename(input_path)
-    print(f"Video from Fase0: {input_file}")
+    print(f"Video from Phase0: {input_file}")
 else:
     mkv_files = [f for f in os.listdir(project_path) if f.endswith('.mkv')]
     if not mkv_files:

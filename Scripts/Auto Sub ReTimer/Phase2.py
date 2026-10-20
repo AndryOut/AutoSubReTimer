@@ -6,7 +6,7 @@ import json
 # =============================================
 # CARICAMENTO PARAMETRI CONFIGURABILI DA JSON
 # =============================================
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "Config_Fase2.json")
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "Config_Phase2.json")
 
 # Valori di default
 DEFAULT_CONFIG = {

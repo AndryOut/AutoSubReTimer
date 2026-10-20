@@ -12,7 +12,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 ENGINE_PYTHON = os.path.join(PROJECT_ROOT, "engine", "python.exe")
 TRANSNET_RUNNER = os.path.join(HERE, "run_transnet.py")
 
-CONFIG_NAME = "Config_Fase3.json"
+CONFIG_NAME = "Config_Phase3.json"
 DETECTORS = ("pyscenedetect", "transnetv2")
 
 
@@ -58,7 +58,7 @@ def video_is_vfr(video_path):
 def run_transnet(video_path, srt_path, output_dir):
     if not os.path.isfile(ENGINE_PYTHON):
         raise RuntimeError("TransNetV2 error: engine not found (engine\\python.exe). "
-                           "Use PySceneDetect in the Fase3 configuration.")
+                           "Use PySceneDetect in the Phase3 configuration.")
     print("Scene detector: TransNetV2", flush=True)
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
@@ -74,4 +74,4 @@ def run_transnet(video_path, srt_path, output_dir):
     rc = process.wait()
     if rc != 0:
         raise RuntimeError(f"TransNetV2 error: run_transnet.py ended with code {rc}. "
-                           "Update the engine or use PySceneDetect in the Fase3 configuration.")
+                           "Update the engine or use PySceneDetect in the Phase3 configuration.")
