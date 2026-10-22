@@ -28,7 +28,7 @@ Separates the loaded subtitles into different categories:
 - Extracts audio from the `.mkv` file.
 - Passes the audio to [Demucs](https://github.com/facebookresearch/demucs) to separate the voice track:
   - **CPU**: ~3–5 minutes
-  - **GPU**: ~30–40 seconds (requires the correct CUDA version in the `main` folder).
+  - **GPU**: ~30–40 seconds (NVIDIA GPU usage requires CUDA. Upon first launch, the program will prompt you to install it. If you skipped the setup, you can install it later via Options > Engine > Enable GPU)
 - All processing is done locally — no external services are used.
 
 **Editable values:** None.
