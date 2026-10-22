@@ -24,7 +24,7 @@ pooch==1.9.0
 pycparser==3.0
 pysrt==1.1.2
 requests==2.34.2
-scenedetect==0.7.1
+scenedetect==0.7.2
 scikit-learn==1.7.2
 scipy==1.15.3
 soundfile==0.14.0
