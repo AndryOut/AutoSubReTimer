@@ -36,7 +36,7 @@ No Python or ffmpeg installation needed. Everything is included.
 | **Audio separation** | Yes (Demucs Phase1) | No |
 | **Lead‑in/out** | Removed and reapplied based on audio peaks (Phase2) | Preserved from the original file |
 | **Gap closing** | Handled inside Phase2 with audio‑aware logic | Simple hardcoded gap closer (Phase2) |
-| **Phase4 presets** | Values hardcoded | Two presets: **Long leads** (default) and **Short leads** |
+| **Phase4 presets** | One set of 4 values | Two presets: **Long leads** (default) and **Short leads** |
 | **Best for** | Subtitles with completely wrong timing that need a full dialogue overhaul | Subtitles with solid base timing but scene‑change misalignment or standardisation gaps (e.g. some Crunchyroll, Disney, Amazon exports) |
 
 ---
