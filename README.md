@@ -29,9 +29,25 @@ Key features:
 
 No Python or ffmpeg installation needed. Everything is included.
 
+## AS vs CR: what changes?
+
+| Aspect | Auto Sub ReTimer (AS) | Auto Sub ReTimer CR |
+|---|---|---|
+| **Audio separation** | Yes (Demucs Phase1) | No |
+| **Lead‑in/out** | Removed and reapplied based on audio peaks (Phase2) | Preserved from the original file |
+| **Gap closing** | Handled inside Phase2 with audio‑aware logic | Simple hardcoded gap closer (Phase2) |
+| **Phase4 presets** | Values hardcoded | Two presets: **Long leads** (default) and **Short leads** |
+| **Best for** | Subtitles with completely wrong timing that need a full dialogue overhaul | Subtitles with solid base timing but scene‑change misalignment or standardisation gaps (e.g. some Crunchyroll, Disney, Amazon exports) |
+
+---
+
 What exactly do the scripts do?  
 Want to customize the settings to suit your preferences?  
-[Read here](Scripts/Auto%20Sub%20ReTimer/README.md)
+
+[Read here for AS](Scripts/Auto%20Sub%20ReTimer/README.md)
+
+[Read here for CR](Scripts/Auto%20Sub%20ReTimer%20CR/README.md)
+
 ---
 
 ## How to use
